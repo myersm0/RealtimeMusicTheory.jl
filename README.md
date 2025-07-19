@@ -19,9 +19,8 @@ using RealtimeMusicTheory
 
 # Create pitches
 middle_c = Pitch(C, 4)
-a440 = Pitch(A, 4)
 
-# Add intervals (computed at compile time!)
+# Add intervals
 e = middle_c + MajorThird()
 g = middle_c + PerfectFifth()
 
@@ -34,8 +33,10 @@ scale = Scale(middle_c, MajorScale)
 third_degree = scale[3]  # E4
 
 # Calculate frequencies
-tuning = EqualTemperament(a440, 440.0)
-freq = frequency(tuning, middle_c)  # ≈ 261.63 Hz
+a4 = Pitch(A, 4)
+diapason = 440.0
+temperament = EqualTemperament(a4, diapason)
+freq = frequency(temperament, middle_c)  # ≈ 261.63 Hz
 ```
 
 ## License
