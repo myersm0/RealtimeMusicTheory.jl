@@ -3,7 +3,7 @@ module RealtimeMusicTheory
 export Pitch, C, D, E, F, G, A, B
 export Natural, Sharp, Flat, DoubleSharp, DoubleFlat, ♮, ♯, ♭, ♯♯, ♭♭
 export Interval, Unison, MinorSecond, MajorSecond, MinorThird, MajorThird
-export PerfectFourth, PerfectFifth, MinorSixth, MajorSixth
+export PerfectFourth, Tritone, PerfectFifth, MinorSixth, MajorSixth
 export MinorSeventh, MajorSeventh, Octave
 export Scale, degree, MajorScale, NaturalMinorScale
 export Chord, majortriad, minortriad
