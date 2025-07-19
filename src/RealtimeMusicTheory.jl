@@ -74,7 +74,7 @@ Pitch(::Type{PC}, octave::Int) where {PC <: PitchClass} =
 
 # Total semitones from C0
 semitone(::Pitch{PC, Acc, Oct}) where {PC, Acc, Oct} = 
-	semitone(PC) + offset(Acc) + 12 * Oct
+	semitone(PC) + offset(Acc) + 12 * (Oct + 1)
 
 Base.show(io::IO, ::Pitch{PC, Acc, Oct}) where {PC, Acc, Oct} = 
 	print(io, PC, Acc == Natural ? "" : Acc == Sharp ? "♯" : "♭", Oct)
