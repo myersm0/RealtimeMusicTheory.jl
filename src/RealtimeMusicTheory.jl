@@ -181,20 +181,4 @@ minortriad(root::P) where P <: Pitch = Chord(root, root + MinorThird, root + Per
 is_major_triad(::Type{Chord{Tuple{R, T, F}}}) where {R, T, F} = 
 	T == typeof(R() + MajorThird) && F == typeof(R() + PerfectFifth)
 
-# ===== Temperaments =====
-
-struct EqualTemperament{BasePitch <: Pitch, BaseFreq} end
-
-EqualTemperament(p::P, freq::Float64) where P <: Pitch = 
-	EqualTemperament{P, freq}()
-
-EqualTemperament(p::P, freq::Number) where P <: Pitch = 
-	EqualTemperament{P, Float64(freq)}()
-
-@generated function frequency(::EqualTemperament{Base, Freq}, ::P) where {Base, Freq, P <: Pitch}
-	semi_diff = semitone(P()) - semitone(Base())
-	ratio = 2.0^(semi_diff / 12.0)
-	:($Freq * $ratio)
-end
-
 end

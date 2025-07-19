@@ -115,21 +115,6 @@ using Test
 		@test is_major_triad(typeof(c_major_triad))
 	end
 	
-	@testset "EqualTemperament" begin
-		a4 = Pitch(A, 4)
-		tuning = EqualTemperament(a4, 440.0)
-		@test frequency(tuning, a4) ≈ 440.0
-		a5 = Pitch(A, 5)
-		@test frequency(tuning, a5) ≈ 880.0
-		a3 = Pitch(A, 3)
-		@test frequency(tuning, a3) ≈ 220.0
-		middle_c = Pitch(C, 4)
-		@test frequency(tuning, middle_c) ≈ 261.626 atol=0.001
-		c_sharp = Pitch(C, ♯, 4)
-		ratio = frequency(tuning, c_sharp) / frequency(tuning, middle_c)
-		@test ratio ≈ 2^(1/12) atol=0.0001
-	end
-
 	@testset "Type stability" begin
 		c = Pitch(C, 4)
 		@test (@inferred c + MajorThird()) isa Pitch{E, Natural, 4}

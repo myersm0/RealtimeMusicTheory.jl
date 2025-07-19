@@ -31,12 +31,6 @@ a_minor = minortriad(Pitch(A, 3))
 # Create scales
 scale = Scale(middle_c, MajorScale)
 third_degree = scale[3]  # E4
-
-# Calculate frequencies
-a4 = Pitch(A, 4)
-diapason = 440.0
-temperament = EqualTemperament(a4, diapason)
-freq = frequency(temperament, middle_c)  # ≈ 261.63 Hz
 ```
 
 ## License
