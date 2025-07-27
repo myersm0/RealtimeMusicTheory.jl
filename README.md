@@ -11,6 +11,7 @@ I'd like to acknowledge dpsanders's very nice package [MusicTheory.jl](https://g
 ```julia
 using Pkg
 Pkg.add("RealtimeMusicTheory")
+```
 
 ## Usage
 ```
