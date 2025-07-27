@@ -52,15 +52,6 @@ d_triad = triad(c_major, ScaleDegree{2})  # D minor triad
 midi_middle_c = semitone(middle_c)  # 60
 midi_a440 = semitone(Pitch(A, 4))   # 69
 ```
-## Performance
-All operations happen at compile time with zero allocations. For example:
-```julia
-julia> middle_c = Pitch(C, 4)
-julia> @code_typed middle_c + M3
-CodeInfo(
-1 ─     return RealtimeMusicTheory.Pitch{RealtimeMusicTheory.PitchClass{RealtimeMusicTheory.E, RealtimeMusicTheory.Natural}, 4}
-) => Type{RealtimeMusicTheory.Pitch{RealtimeMusicTheory.PitchClass{RealtimeMusicTheory.E, RealtimeMusicTheory.Natural}, 4}}
-```
 
 ## License
 MIT
