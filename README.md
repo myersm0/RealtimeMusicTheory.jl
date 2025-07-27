@@ -40,7 +40,7 @@ c5 = middle_c + P8       # octave
 Shorthands M3, P8, etc are defined for common intervals up through P8 (a perfect 8th AKA octave), but you can specify arbitrary intervals via this slightly more verbose syntax:
 ```
 d5 = middle_c + Interval(9, Major)
-c6 = middle_c + Interval(16, Perfect)
+c6 = middle_c + Interval(15, Perfect)
 ```
 
 Chromatic and diatonic steps:
