@@ -8,6 +8,8 @@ struct Diminished <: IntervalQuality end
 
 struct Interval{Number, Quality <: IntervalQuality} <: Step end
 
+Interval(n::Int, quality::Type{Q}) where Q <: IntervalQuality = Interval{n, quality}
+
 const P1 = Interval{1, Perfect}
 const m2 = Interval{2, Minor}
 const M2 = Interval{2, Major}
