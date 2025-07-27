@@ -11,26 +11,54 @@ I'd like to acknowledge dpsanders's very nice package [MusicTheory.jl](https://g
 ```julia
 using Pkg
 Pkg.add("RealtimeMusicTheory")
-```
 
 ## Usage
-```julia
+```
 using RealtimeMusicTheory
 
-# Create pitches
+# Create pitches using type constructors
 middle_c = Pitch(C, 4)
+c_sharp = Pitch(C, Sharp, 4)  # or Pitch(C, ♯, 4) or Pitch(C♯, 4)
+d_flat = Pitch(D, Flat, 4)    # or Pitch(D, ♭, 4) or Pitch(D♭, 4)
 
-# Add intervals
-e = middle_c + MajorThird()
-g = middle_c + PerfectFifth()
+# Interval arithmetic
+e4 = middle_c + M3       # Major third
+e_flat4 = middle_c + m3  # Minor third
+g4 = middle_c + P5       # Perfect fifth
+c5 = middle_c + P8       # Octave
 
-# Build chords
-c_major = majortriad(middle_c)
-a_minor = minortriad(Pitch(A, 3))
+# Chromatic and diatonic steps
+c_sharp4 = middle_c + ChromaticStep{1}   # One semitone up
+c_sharp4 = middle_c + ChromaticStep{-1}  # One semitone down
+d4 = middle_c + DiatonicStep{1}          # One letter name up
+b4 = middle_c + DiatonicStep{-1}         # One letter name up
 
-# Create scales
-scale = Scale(middle_c, MajorScale)
-third_degree = scale[3]  # E4
+# Scales
+c_major = Scale(MajorScale, PitchClass(C))
+d_minor = Scale(MinorScale, PitchClass(D))
+d_harmonic_minor = Scale(HarmonicMinorScale, PitchClass(D))
+
+# Access scale degrees
+tonic = c_major[ScaleDegree{1}]        # C
+dominant = c_major[ScaleDegree{5}]     # G
+leading_tone = c_major[ScaleDegree{7}] # B
+
+# Build triads from scales
+c_triad = triad(c_major, ScaleDegree{1})  # C major triad
+d_triad = triad(c_major, ScaleDegree{2})  # D minor triad
+
+# Conversion to MIDI note numbers
+midi_middle_c = semitone(middle_c)  # 60
+midi_a440 = semitone(Pitch(A, 4))   # 69
+```
+## Performance
+All operations happen at compile time with zero allocations. For example:
+```julia
+julia> middle_c = Pitch(C, 4)
+julia> @code_typed middle_c + M3
+CodeInfo(
+1 ─     return RealtimeMusicTheory.Pitch{RealtimeMusicTheory.PitchClass{RealtimeMusicTheory.E, RealtimeMusicTheory.Natural}, 4}
+) => Type{RealtimeMusicTheory.Pitch{RealtimeMusicTheory.PitchClass{RealtimeMusicTheory.E, RealtimeMusicTheory.Natural}, 4}}
 ```
 
 ## License
