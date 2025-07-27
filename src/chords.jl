@@ -2,9 +2,9 @@
 struct Chord{PitchClasses <: Tuple} end
 
 @generated function triad(::Type{Scale{PCs}}, ::Type{ScaleDegree{N}}) where {PCs, N}
-	root = scale_pitch(Scale{PCs}, ScaleDegree{N})
-	third = scale_pitch(Scale{PCs}, ScaleDegree{mod1(N+2, 7)})
-	fifth = scale_pitch(Scale{PCs}, ScaleDegree{mod1(N+4, 7)})
+	root = getindex(Scale{PCs}, ScaleDegree{N})
+	third = getindex(Scale{PCs}, ScaleDegree{mod1(N+2, 7)})
+	fifth = getindex(Scale{PCs}, ScaleDegree{mod1(N+4, 7)})
 	return :(Chord{Tuple{$root, $third, $fifth}})
 end
 
