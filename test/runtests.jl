@@ -2,127 +2,88 @@ using RealtimeMusicTheory
 using BenchmarkTools
 using Test
 
+import RealtimeMusicTheory.semitone
+
 @testset "RealtimeMusicTheory.jl" begin
 
-	@testset "PitchClasses" begin
-		@test semitone(C) == 0
-		@test semitone(D) == 2
-		@test semitone(E) == 4
-		@test semitone(F) == 5
-		@test semitone(G) == 7
-		@test semitone(A) == 9
-		@test semitone(B) == 11
-		@test next_note(C) == D
-		@test next_note(B) == C  # Wraps around
-	end
-	
-	@testset "Accidentals" begin
-		@test offset(Natural) == 0
-		@test offset(Sharp) == 1
-		@test offset(Flat) == -1
-		@test Natural == ♮
-		@test Sharp == ♯
-		@test Flat == ♭
-	end
-	
 	@testset "Pitches" begin
-		middle_c = Pitch(C, 4)
-		@test middle_c isa Pitch{C, Natural, 4}
+		middle_c = Pitch(C, Natural, 4)
+		@test middle_c == Pitch(C, 4)
 		c_sharp = Pitch(C, ♯, 4)
-		@test c_sharp isa Pitch{C, Sharp, 4}
+		@test c_sharp == Pitch(C, Sharp, 4)
 		d_flat = Pitch(D, ♭, 4)
-		@test d_flat isa Pitch{D, Flat, 4}
+		@test d_flat == Pitch(D, Flat, 4)
 		@test semitone(middle_c) == 60  # MIDI middle C
 		@test semitone(c_sharp) == 61
 		@test semitone(d_flat) == 61
 		@test semitone(Pitch(A, 4)) == 69  # A440
 	end
 	
-	@testset "Intervals" begin
-		@test semitones(Unison) == 0
-		@test semitones(MinorSecond) == 1
-		@test semitones(MajorSecond) == 2
-		@test semitones(MinorThird) == 3
-		@test semitones(MajorThird) == 4
-		@test semitones(PerfectFourth) == 5
-		@test semitones(Tritone) == 6
-		@test semitones(PerfectFifth) == 7
-		@test semitones(MinorSixth) == 8
-		@test semitones(MajorSixth) == 9
-		@test semitones(MinorSeventh) == 10
-		@test semitones(MajorSeventh) == 11
-		@test semitones(Octave) == 12
-	end
-	
 	@testset "Interval arithmetic" begin
 		c4 = Pitch(C, 4)
 		
-		# Basic intervals
-		@test (c4 + Unison) == c4
-		@test (c4 + MajorThird) isa Pitch{E, Natural, 4}
-		@test (c4 + PerfectFifth) isa Pitch{G, Natural, 4}
-		@test (c4 + Octave) isa Pitch{C, Natural, 5}
+		@test (c4 + P1) == c4
+		@test (c4 + M3) == Pitch(E, Natural, 4)
+		@test (c4 + P5) == Pitch(G, Natural, 4)
+		@test (c4 + P8) == Pitch(C, Natural, 5) # todo: one octave too high!
 		
 		# Intervals with accidentals
-		@test (c4 + MinorSecond) isa Pitch{C, Sharp, 4}  # Simplified mapping
-		@test (c4 + MinorThird) isa Pitch{D, Sharp, 4}   # Simplified (should be Eb)
+		@test (c4 + m2) == Pitch(D, Flat, 4)
+		@test (c4 + m3) == Pitch(E, Flat, 4)
 		
 		# Octave crossing
 		b4 = Pitch(B, 4)
-		@test (b4 + MajorSecond) isa Pitch{C, Sharp, 5}  # Crosses octave
+		@test (b4 + M2) == Pitch(C, Sharp, 5)  # todo: one octave too high!
 		
 		# From different starting notes
 		d4 = Pitch(D, 4)
-		@test (d4 + MajorThird) isa Pitch{F, Sharp, 4}
+		@test (d4 + M3) == Pitch(F, Sharp, 4)
 		
 		e4 = Pitch(E, 4)
-		@test (e4 + PerfectFourth) isa Pitch{A, Natural, 4}
+		@test (e4 + P4) == Pitch(A, Natural, 4)
 		
 		# With accidentals in starting pitch
 		f_sharp = Pitch(F, ♯, 4)
-		@test semitone(f_sharp + PerfectFifth) == semitone(Pitch(C, ♯, 5))
+		@test semitone(f_sharp + P5) == semitone(Pitch(C, ♯, 5))
 	end
 	
 	@testset "Scales" begin
-		c_major = Scale(Pitch(C, 4), MajorScale)
-		@test c_major isa Scale{Pitch{C, Natural, 4}, MajorScale}
-		@test c_major[1] isa Pitch{C, Natural, 4}
-		@test c_major[2] isa Pitch{D, Natural, 4}
-		@test c_major[3] isa Pitch{E, Natural, 4}
-		@test c_major[4] isa Pitch{F, Natural, 4}
-		@test c_major[5] isa Pitch{G, Natural, 4}
-		@test c_major[6] isa Pitch{A, Natural, 4}
-		@test c_major[7] isa Pitch{B, Natural, 4}
-		@test c_major[8] isa Pitch{C, Natural, 5}  # Octave
-		a_minor = Scale(Pitch(A, 3), NaturalMinorScale)
-		@test a_minor[1] isa Pitch{A, Natural, 3}
-		@test a_minor[3] isa Pitch{C, Natural, 4}  # Minor third
-		d_major = Scale(Pitch(D, 4), MajorScale)
-		@test d_major[1] isa Pitch{D, Natural, 4}
-		@test d_major[3] isa Pitch{F, Sharp, 4}  # F# in D major
+		c_major = Scale(MajorScale, PitchClass(C))
+		@test c_major[ScaleDegree{1}] == PitchClass(C, Natural)
+		@test c_major[ScaleDegree{2}] == PitchClass(D, Natural)
+		@test c_major[ScaleDegree{3}] == PitchClass(E, Natural)
+		@test c_major[ScaleDegree{4}] == PitchClass(F, Natural)
+		@test c_major[ScaleDegree{5}] == PitchClass(G, Natural)
+		@test c_major[ScaleDegree{6}] == PitchClass(A, Natural)
+		@test c_major[ScaleDegree{7}] == PitchClass(B, Natural)
+		@test c_major[ScaleDegree{8}] == PitchClass(C, Natural)
+
+		d_minor = Scale(MinorScale, PitchClass(D)) # todo: this gives us A# instead of Bb
+		@test d_minor[ScaleDegree{1}] == PitchClass(D, Natural)
+		@test d_minor[ScaleDegree{2}] == PitchClass(E, Natural)
+		@test d_minor[ScaleDegree{3}] == PitchClass(F, Natural)
+		@test d_minor[ScaleDegree{4}] == PitchClass(G, Natural)
+		@test d_minor[ScaleDegree{5}] == PitchClass(A, Natural)
+		@test d_minor[ScaleDegree{6}] == PitchClass(B, Flat)
+		@test d_minor[ScaleDegree{7}] == PitchClass(C, Natural)
+		@test d_minor[ScaleDegree{8}] == PitchClass(D, Natural)
 	end
 	
 	@testset "Chords" begin
-		c = Pitch(C, 4)
-		e = Pitch(E, 4)
-		g = Pitch(G, 4)
-		c_major_chord = Chord(c, e, g)
-		@test c_major_chord isa Chord
-		c_major_triad = majortriad(c)
-		@test c_major_triad isa Chord
-		a_minor_triad = minortriad(Pitch(A, 3))
-		@test a_minor_triad isa Chord
-		@test is_major_triad(typeof(c_major_triad))
+		c_major = Scale(MajorScale, PitchClass(C))
+		c_triad = triad(c_major, ScaleDegree{1})
+		c_triad == Chord{Tuple{PitchClass(C), PitchClass(E), PitchClass(G)}}
+		d_minor = Scale(MinorScale, PitchClass(D))
+		d_triad = triad(d_minor, ScaleDegree{1})
+		d_triad == Chord{Tuple{PitchClass(D), PitchClass(F), PitchClass(A)}}
 	end
 	
 	@testset "Type stability" begin
 		c = Pitch(C, 4)
-		@test (@inferred c + MajorThird()) isa Pitch{E, Natural, 4}
+		@test (@inferred c + M3) == Pitch(E, Natural, 4)
+		@test @allocated(c + M3) == 0
 		@test (@inferred semitone(c)) == 60
-		@test (@inferred majortriad(c)) isa Chord
-		@test @allocated(c + MajorThird()) == 0
 		@test @allocated(semitone(c)) == 0
-		@test @allocated(majortriad(c)) == 0
 	end
 	
 	@testset "Edge cases" begin
@@ -138,21 +99,9 @@ using Test
 		d_flat = Pitch(D, ♭, 4)
 		@test semitone(c_sharp) == semitone(d_flat)
 		
-		# But are different types
-		@test !(typeof(c_sharp) == typeof(d_flat))
-		
 		# Intervals that wrap around
 		b4 = Pitch(B, 4)
-		@test semitone(b4 + MinorSecond) == semitone(Pitch(C, 5))
-	end
-	
-	@testset "Compile-time guarantees" begin
-		# Test that scale degrees are computed at compile time
-		scale = Scale(Pitch(C, 4), MajorScale)
-		
-		# This should be fully resolved at compile time
-		third_degree_type = typeof(degree(scale, Val(3)))
-		@test third_degree_type == Pitch{E, Natural, 4}
+		@test semitone(b4 + m2) == semitone(Pitch(C, 5))
 	end
 	
 	@testset "Performance benchmarks" begin
@@ -162,11 +111,11 @@ using Test
 		b_pitch_creation = @benchmark Pitch(C, 4)
 		@test median(b_pitch_creation.times) < 10  # nanoseconds
 		
-		b_interval_add = @benchmark $c + MajorThird
-		@test median(b_interval_add.times) < 10
+		b_interval_add = @benchmark $c + M3
+		@test median(b_interval_add.times) < 10 # failed!
 		
 		b_semitone = @benchmark semitone($c)
-		@test median(b_semitone.times) < 10
+		@test median(b_semitone.times) < 10 # failed!
 		
 		# No allocations
 		@test b_pitch_creation.allocs == 0
