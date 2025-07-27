@@ -93,13 +93,15 @@ offset(::Type{DoubleFlat}) = -2
 # Total semitones for a pitch class
 @generated function semitone(::Type{PitchClass{L, A}}) where {L, A}
 	semi = chromatic_position(L) + offset(A)
-	return :(mod($semi, 12))
+	return :($semi)
 end
 
 # Total semitones for a pitch (with octave)
 @generated function semitone(::Type{Pitch{PC, Register}}) where {PC, Register}
 	pc_semi = semitone(PC)
-	total = pc_semi + 12 * (Register + 1)  # +1 for MIDI compatibility
+	register_adjustment = div(pc_semi, 12)
+	semi_in_register = mod(pc_semi, 12)
+	total = semi_in_register + 12 * (Register + register_adjustment + 1)  # +1 for MIDI compatibility
 	return :($total)
 end
 
@@ -109,7 +111,7 @@ function letter_step(::Type{L}, steps::Int) where {L <: LetterName}
 	current = letter_position(L)
 	new_pos = mod(current + steps, 7)
 	new_letter = letters[new_pos + 1]
-	return :($new_letter)
+	return new_letter
 end
 
 # Add semitones to a pitch class

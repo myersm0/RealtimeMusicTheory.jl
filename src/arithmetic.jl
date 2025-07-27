@@ -21,48 +21,43 @@ end
 
 @generated function Base.:+(::Type{Pitch{PC, Register}}, ::Type{Interval{N, Q}}) where {PC, Register, N, Q}
 	start_letter = letter(PC)
-	# Calculate target letter (N-1 because intervals are 1-indexed)
+	# calculate target letter (N-1 because intervals are 1-indexed)
 	letter_steps = N - 1
 	target_letter = letter_step(start_letter, letter_steps)
-	# Calculate semitones needed
+	
+	# calculate register change from letter progression
+	start_pos = letter_position(start_letter)
+	new_register = Register + div(start_pos + letter_steps, 7)
+	
+	# calculate semitones needed
 	chromatic_step = to_chromatic_step(Interval{N, Q})
 	semi_needed = chromatic_step.parameters[1]
 	
-	# Current position (just pitch class, not with octave)
-	start_pc_semi = semitone(PC)
+	# get the starting pitch's total semitone value
+	start_pitch_semi = semitone(Pitch{PC, Register})
+	target_pitch_semi = start_pitch_semi + semi_needed
 	
-	# Calculate octave changes from letter position
-	start_pos = letter_position(start_letter)
-	register_from_letters = div(start_pos + letter_steps, 7)
+	# determine accidental needed and calculate what semitone 
+	 # the target letter would have naturally in the target register
+	target_natural_semi = chromatic_position(target_letter) + (new_register + 1) * 12
+	required_offset = target_pitch_semi - target_natural_semi
 	
-	# Calculate the target semitone within an octave
-	target_semi_total = start_pc_semi + semi_needed
-	register_from_semis = div(target_semi_total, 12)
-	target_semi_in_register = mod(target_semi_total, 12)
-	
-	# New octave (only add the change, not absolute position)
-	new_register = Register + register_from_letters
-	
-	# Determine accidental needed
-	target_natural_semi = chromatic_position(target_letter)
-	required_offset = target_semi_in_register - target_natural_semi
-	
-	# Normalize offset to -12..12 range first
-	if required_offset > 6
+	# Handle wrap-around cases
+	while required_offset > 2
 		required_offset -= 12
 		new_register += 1
-	elseif required_offset < -6
+	end
+	while required_offset < -2
 		required_offset += 12
 		new_register -= 1
 	end
 	
-	# Map to accidental
 	acc = required_offset == -2 ? DoubleFlat :
 		required_offset == -1 ? Flat :
 		required_offset == 0 ? Natural :
 		required_offset == 1 ? Sharp :
 		required_offset == 2 ? DoubleSharp :
-		Natural # should never reach this
+		error("Invalid accidental offset: $required_offset")
 	
 	new_pc = PitchClass{target_letter, acc}
 	return :(Pitch{$new_pc, $new_register})
