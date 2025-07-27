@@ -28,37 +28,43 @@ end
 	chromatic_step = to_chromatic_step(Interval{N, Q})
 	semi_needed = chromatic_step.parameters[1]
 	
-	# Current position
-	start_semi = semitone(PC)
-	target_semi = start_semi + semi_needed
+	# Current position (just pitch class, not with octave)
+	start_pc_semi = semitone(PC)
 	
-	# Calculate register
+	# Calculate octave changes from letter position
 	start_pos = letter_position(start_letter)
 	register_from_letters = div(start_pos + letter_steps, 7)
-	new_register = Register + register_from_letters + div(target_semi, 12)
+	
+	# Calculate the target semitone within an octave
+	target_semi_total = start_pc_semi + semi_needed
+	register_from_semis = div(target_semi_total, 12)
+	target_semi_in_register = mod(target_semi_total, 12)
+	
+	# New octave (only add the change, not absolute position)
+	new_register = Register + register_from_letters
 	
 	# Determine accidental needed
 	target_natural_semi = chromatic_position(target_letter)
-	target_semi_in_register = mod(target_semi, 12)
 	required_offset = target_semi_in_register - target_natural_semi
 	
-	# Normalize offset
-	if required_offset > 2
+	# Normalize offset to -12..12 range first
+	if required_offset > 6
 		required_offset -= 12
-	elseif required_offset < -2
+		new_register += 1
+	elseif required_offset < -6
 		required_offset += 12
+		new_register -= 1
 	end
 	
 	# Map to accidental
 	acc = required_offset == -2 ? DoubleFlat :
-		  required_offset == -1 ? Flat :
-		  required_offset == 0 ? Natural :
-		  required_offset == 1 ? Sharp :
-		  required_offset == 2 ? DoubleSharp :
-		  Natural  # Fallback
+		required_offset == -1 ? Flat :
+		required_offset == 0 ? Natural :
+		required_offset == 1 ? Sharp :
+		required_offset == 2 ? DoubleSharp :
+		Natural # should never reach this
 	
 	new_pc = PitchClass{target_letter, acc}
-	
 	return :(Pitch{$new_pc, $new_register})
 end
 
