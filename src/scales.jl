@@ -1,15 +1,14 @@
 
-abstract type ScaleType end
+abstract type AbstractScale end
 
-abstract type DiatonicScaleType <: ScaleType end
-struct MajorScale <: DiatonicScaleType end
-struct NaturalMinorScale <: DiatonicScaleType end
-struct HarmonicMinorScale <: DiatonicScaleType end
-struct MelodicMinorScale <: DiatonicScaleType end
+abstract type DiatonicScale <: AbstractScale end
+struct MajorScale <: DiatonicScale end
+struct NaturalMinorScale <: DiatonicScale end
+struct HarmonicMinorScale <: DiatonicScale end
+struct MelodicMinorScale <: DiatonicScale end
+struct ChromaticScale <: AbstractScale end
 
 const MinorScale = NaturalMinorScale
-
-struct ChromaticScale <: ScaleType end
 
 # Scale patterns (using chromatic steps)
 scale_pattern(::Type{MajorScale}) = (
@@ -36,7 +35,7 @@ scale_pattern(::Type{ChromaticScale}) = ntuple(_ -> ChromaticStep{1}, 11)
 
 struct Scale{PitchClasses <: Tuple} end
 
-@generated function Scale(::Type{ST}, ::Type{Root}) where {ST <: ScaleType, Root <: PitchClass}
+@generated function Scale(::Type{ST}, ::Type{Root}) where {ST <: AbstractScale, Root <: PitchClass}
 	pattern = scale_pattern(ST)
 	pitches = Type[Root]
 	current = Root
