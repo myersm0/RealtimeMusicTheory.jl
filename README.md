@@ -32,18 +32,18 @@ d_flat = Pitch(D, Flat, 4)    # or Pitch(D, ♭, 4) or Pitch(D♭, 4)
 
 Interval arithmetic:
 ```
-e4 = middle_c + M3       # Major third
-e_flat4 = middle_c + m3  # Minor third
-g4 = middle_c + P5       # Perfect fifth
-c5 = middle_c + P8       # Octave
+e4 = middle_c + M3       # major third
+e_flat4 = middle_c + m3  # minor third
+g4 = middle_c + P5       # perfect fifth
+c5 = middle_c + P8       # octave
 ```
 
 Chromatic and diatonic steps:
 ```
-c_sharp4 = middle_c + ChromaticStep{1}   # One semitone up
-c_sharp4 = middle_c + ChromaticStep{-1}  # One semitone down
-d4 = middle_c + DiatonicStep{1}          # One letter name up
-b4 = middle_c + DiatonicStep{-1}         # One letter name down
+c_sharp4 = middle_c + ChromaticStep{1}   # one semitone up
+c_sharp4 = middle_c + ChromaticStep{-1}  # one semitone down
+d4 = middle_c + DiatonicStep{1}          # one letter name up
+b4 = middle_c + DiatonicStep{-1}         # one letter name down
 ```
 
 Scales:
@@ -59,7 +59,7 @@ leading_tone = c_major[ScaleDegree{7}] # B
 Chords (limited support so far; more coming soon):
 ```
 c_triad = triad(c_major, ScaleDegree{1})  # C major triad
-d_triad = triad(c_major, ScaleDegree{2})  # D minor triad
+d_triad = triad(c_major, ScaleDegree{2})  # d minor triad
 ```
 
 Conversion to MIDI note numbers
