@@ -70,8 +70,7 @@ import RealtimeMusicTheory.semitone
 		@test d_minor[ScaleDegree{3}] == PitchClass(F, Natural)
 		@test d_minor[ScaleDegree{4}] == PitchClass(G, Natural)
 		@test d_minor[ScaleDegree{5}] == PitchClass(A, Natural)
-#		@test d_minor[ScaleDegree{6}] == PitchClass(B, Flat)
-		@test d_minor[ScaleDegree{6}] == PitchClass(A, Sharp)
+		@test d_minor[ScaleDegree{6}] == PitchClass(B, Flat)
 		@test d_minor[ScaleDegree{7}] == PitchClass(C, Natural)
 		@test d_minor[ScaleDegree{8}] == PitchClass(D, Natural)
 	end

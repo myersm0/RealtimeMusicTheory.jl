@@ -35,11 +35,42 @@ scale_pattern(::Type{ChromaticScale}) = ntuple(_ -> ChromaticStep{1}, 11)
 
 struct Scale{PitchClasses <: Tuple} end
 
-@generated function Scale(::Type{ST}, ::Type{Root}) where {ST <: AbstractScale, Root <: PitchClass}
+@generated function Scale(::Type{ST}, ::Type{Root}) where {ST <: DiatonicScale, Root <: PitchClass}
 	pattern = scale_pattern(ST)
+	root_letter = letter(Root)
+	root_acc = accidental(Root)
+	root_semi = semitone(Root)
+	pitches = Type[] # for diatonic scales we need each letter exactly once
+	push!(pitches, Root)
+	cumulative_semis = 0
+	current_letter = root_letter
+	for (i, step) in enumerate(pattern[1:end-1])
+		current_letter = letter_step(current_letter, 1)
+		cumulative_semis += step.parameters[1]
+		target_semi = mod(root_semi + cumulative_semis, 12)
+		natural_semi = chromatic_position(current_letter)
+		offset = target_semi - natural_semi
+		if offset > 6
+			offset -= 12
+		elseif offset < -6
+			offset += 12
+		end
+		acc = offset == -2 ? DoubleFlat :
+			offset == -1 ? Flat :
+			offset == 0 ? Natural :
+			offset == 1 ? Sharp :
+			offset == 2 ? DoubleSharp :
+			error("Invalid scale step")
+		push!(pitches, PitchClass{current_letter, acc})
+	end
+	return :(Scale{Tuple{$(pitches...)}})
+end
+
+@generated function Scale(::Type{ChromaticScale}, ::Type{Root}) where {Root <: PitchClass}
+	pattern = scale_pattern(ChromaticScale)
 	pitches = Type[Root]
 	current = Root
-	for step in pattern[1:end-1]
+	for step in pattern
 		semi = step.parameters[1]
 		current = add_semitones(current, semi)
 		push!(pitches, current)
