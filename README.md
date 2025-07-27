@@ -17,8 +17,13 @@ Pkg.add("RealtimeMusicTheory")
 ```
 using RealtimeMusicTheory
 ```
+A PitchClass is a note name with optional accidental, but lacking octave/register info:
+```
+c = PitchClass(C)
+c_sharp = PitchClass(C, Sharp)
+```
 
-Create pitches using type constructors:
+A Pitch contains register info, to tie it to a specific MIDI note or a specific key on the keyboard:
 ```
 middle_c = Pitch(C, 4)
 c_sharp = Pitch(C, Sharp, 4)  # or Pitch(C, ♯, 4) or Pitch(C♯, 4)
@@ -49,6 +54,7 @@ d_harmonic_minor = Scale(HarmonicMinorScale, PitchClass(D))
 tonic = c_major[ScaleDegree{1}]        # C
 dominant = c_major[ScaleDegree{5}]     # G
 leading_tone = c_major[ScaleDegree{7}] # B
+```
 
 Chords (limited support so far; more coming soon):
 ```
