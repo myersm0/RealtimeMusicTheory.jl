@@ -21,6 +21,12 @@ import RealtimeMusicTheory.semitone
 	
 	@testset "Interval arithmetic" begin
 		c4 = Pitch(C, 4)
+
+		@test (c4 + ChromaticStep{1}) == Pitch(C, Sharp, 4)
+		@test (c4 + ChromaticStep{12}) == Pitch(C, 5)
+
+		@test (c4 + DiatonicStep{1}) == Pitch(D, 4)
+		@test (c4 + DiatonicStep{7}) == Pitch(C, 5)
 		
 		@test (c4 + P1) == c4
 		@test (c4 + M3) == Pitch(E, Natural, 4)
