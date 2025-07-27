@@ -22,23 +22,22 @@ const 𝄪 = DoubleSharp
 const 𝄫 = DoubleFlat
 
 struct PitchClass{L <: LetterName, A <: Accidental} end
-struct Pitch{PC <: PitchClass, Oct} end
+struct Pitch{PC <: PitchClass, Register} end
 
-# Constructors
 PitchClass(::Type{L}, ::Type{A}) where {L <: LetterName, A <: Accidental} = 
 	PitchClass{L, A}
 
 PitchClass(::Type{L}) where {L <: LetterName} = 
 	PitchClass{L, Natural}
 
-Pitch(::Type{PC}, octave::Int) where {PC <: PitchClass} = 
-	Pitch{PC, octave}
+Pitch(::Type{PC}, register::Int) where {PC <: PitchClass} = 
+	Pitch{PC, register}
 
-Pitch(::Type{L}, ::Type{A}, octave::Int) where {L <: LetterName, A <: Accidental} = 
-	Pitch{PitchClass{L, A}, octave}
+Pitch(::Type{L}, ::Type{A}, register::Int) where {L <: LetterName, A <: Accidental} = 
+	Pitch{PitchClass{L, A}, register}
 
-Pitch(::Type{L}, octave::Int) where {L <: LetterName} = 
-	Pitch{PitchClass{L, Natural}, octave}
+Pitch(::Type{L}, register::Int) where {L <: LetterName} = 
+	Pitch{PitchClass{L, Natural}, register}
 
 const C♮ = PitchClass{C, Natural}
 const C♯ = PitchClass{C, Sharp}
@@ -64,10 +63,10 @@ const C♭ = PitchClass{C, Flat}
 
 letter(::Type{PitchClass{L, A}}) where {L, A} = L
 accidental(::Type{PitchClass{L, A}}) where {L, A} = A
-letter(::Type{Pitch{PC, Oct}}) where {PC, Oct} = letter(PC)
-accidental(::Type{Pitch{PC, Oct}}) where {PC, Oct} = accidental(PC)
-octave(::Type{Pitch{PC, Oct}}) where {PC, Oct} = Oct
-pitch_class(::Type{Pitch{PC, Oct}}) where {PC, Oct} = PC
+letter(::Type{Pitch{PC, Register}}) where {PC, Register} = letter(PC)
+accidental(::Type{Pitch{PC, Register}}) where {PC, Register} = accidental(PC)
+register(::Type{Pitch{PC, Register}}) where {PC, Register} = Register
+pitch_class(::Type{Pitch{PC, Register}}) where {PC, Register} = PC
 
 letter_position(::Type{C}) = 0
 letter_position(::Type{D}) = 1
@@ -98,9 +97,9 @@ offset(::Type{DoubleFlat}) = -2
 end
 
 # Total semitones for a pitch (with octave)
-@generated function semitone(::Type{Pitch{PC, Oct}}) where {PC, Oct}
+@generated function semitone(::Type{Pitch{PC, Register}}) where {PC, Register}
 	pc_semi = semitone(PC)
-	total = pc_semi + 12 * (Oct + 1)  # +1 for MIDI compatibility
+	total = pc_semi + 12 * (Register + 1)  # +1 for MIDI compatibility
 	return :($total)
 end
 
@@ -120,19 +119,19 @@ function add_semitones(::Type{PitchClass{Letter, Acc}}, semitones::Int) where {L
 	# Determine best spelling (prefer sharps when ascending, flats when descending)
 	spellings = [
 		(0, C, Natural),
-		(1, C, Sharp),	# Could also be (D, Flat)
+		(1, C, Sharp),
 		(2, D, Natural),
-		(3, D, Sharp),	# Could also be (E, Flat)
+		(3, D, Sharp),
 		(4, E, Natural),
 		(5, F, Natural),
-		(6, F, Sharp),	# Could also be (G, Flat)
+		(6, F, Sharp),
 		(7, G, Natural),
-		(8, G, Sharp),	# Could also be (A, Flat)
+		(8, G, Sharp),
 		(9, A, Natural),
-		(10, A, Sharp),   # Could also be (B, Flat)
+		(10, A, Sharp),
 		(11, B, Natural)
 	]
-	# Simple spelling for now - always use sharps
+	# Simple spelling for now - always use sharps (todo: improve this)
 	semi, letter, acc = spellings[target_semi + 1]
 	return PitchClass{letter, acc}
 end

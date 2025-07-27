@@ -1,25 +1,25 @@
 
-@generated function Base.:+(::Type{Pitch{PC, Oct}}, ::Type{ChromaticStep{N}}) where {PC, Oct, N}
+@generated function Base.:+(::Type{Pitch{PC, Register}}, ::Type{ChromaticStep{N}}) where {PC, Register, N}
 	current_semi = semitone(PC)
 	total_semi = current_semi + N
-	octave_change = div(total_semi, 12)
-	new_octave = Oct + octave_change
+	register_change = div(total_semi, 12)
+	new_register = Register + register_change
 	new_pc = add_semitones(PC, N)
-	return :(Pitch{$new_pc, $new_octave})
+	return :(Pitch{$new_pc, $new_register})
 end
 
-@generated function Base.:+(::Type{Pitch{PC, Oct}}, ::Type{DiatonicStep{N}}) where {PC, Oct, N}
+@generated function Base.:+(::Type{Pitch{PC, Register}}, ::Type{DiatonicStep{N}}) where {PC, Register, N}
 	current_letter = letter(PC)
 	current_acc = accidental(PC)
 	new_letter = letter_step(current_letter, N)
 	current_pos = letter_position(current_letter)
-	octave_change = div(current_pos + N, 7)
-	new_octave = Oct + octave_change
+	register_change = div(current_pos + N, 7)
+	new_register = Register + register_change
 	new_pc = PitchClass{new_letter, current_acc}
-	return :(Pitch{$new_pc, $new_octave})
+	return :(Pitch{$new_pc, $new_register})
 end
 
-@generated function Base.:+(::Type{Pitch{PC, Oct}}, ::Type{Interval{N, Q}}) where {PC, Oct, N, Q}
+@generated function Base.:+(::Type{Pitch{PC, Register}}, ::Type{Interval{N, Q}}) where {PC, Register, N, Q}
 	start_letter = letter(PC)
 	# Calculate target letter (N-1 because intervals are 1-indexed)
 	letter_steps = N - 1
@@ -32,15 +32,15 @@ end
 	start_semi = semitone(PC)
 	target_semi = start_semi + semi_needed
 	
-	# Calculate octave
+	# Calculate register
 	start_pos = letter_position(start_letter)
-	octave_from_letters = div(start_pos + letter_steps, 7)
-	new_octave = Oct + octave_from_letters + div(target_semi, 12)
+	register_from_letters = div(start_pos + letter_steps, 7)
+	new_register = Register + register_from_letters + div(target_semi, 12)
 	
 	# Determine accidental needed
 	target_natural_semi = chromatic_position(target_letter)
-	target_semi_in_octave = mod(target_semi, 12)
-	required_offset = target_semi_in_octave - target_natural_semi
+	target_semi_in_register = mod(target_semi, 12)
+	required_offset = target_semi_in_register - target_natural_semi
 	
 	# Normalize offset
 	if required_offset > 2
@@ -59,22 +59,22 @@ end
 	
 	new_pc = PitchClass{target_letter, acc}
 	
-	return :(Pitch{$new_pc, $new_octave})
+	return :(Pitch{$new_pc, $new_register})
 end
 
 # Add generic interval within scale context
 @generated function Base.:+(
-		::Type{Pitch{PC, Oct}}, 
+		::Type{Pitch{PC, Register}}, 
 		::Type{GenericInterval{N}},
 		::Type{Scale{PCs}}
-	) where {PC, Oct, N, PCs}
+	) where {PC, Register, N, PCs}
 	pos = scale_position(Scale{PCs}, PC)
 	!isnothing(pos) || return :(error("Pitch class not in scale"))
 	new_pos = mod(pos + N, length(PCs.parameters))
 	new_pc = PCs.parameters[new_pos + 1]
-	octave_change = div(pos + N, length(PCs.parameters))
-	new_octave = Oct + octave_change
-	return :(Pitch{$new_pc, $new_octave})
+	register_change = div(pos + N, length(PCs.parameters))
+	new_register = Register + register_change
+	return :(Pitch{$new_pc, $new_register})
 end
 
 # Allow instances as well as types
