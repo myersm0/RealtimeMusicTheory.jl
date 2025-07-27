@@ -16,39 +16,48 @@ Pkg.add("RealtimeMusicTheory")
 ## Usage
 ```
 using RealtimeMusicTheory
+```
 
-# Create pitches using type constructors
+Create pitches using type constructors:
+```
 middle_c = Pitch(C, 4)
 c_sharp = Pitch(C, Sharp, 4)  # or Pitch(C, ♯, 4) or Pitch(C♯, 4)
 d_flat = Pitch(D, Flat, 4)    # or Pitch(D, ♭, 4) or Pitch(D♭, 4)
+```
 
-# Interval arithmetic
+Interval arithmetic:
+```
 e4 = middle_c + M3       # Major third
 e_flat4 = middle_c + m3  # Minor third
 g4 = middle_c + P5       # Perfect fifth
 c5 = middle_c + P8       # Octave
+```
 
-# Chromatic and diatonic steps
+Chromatic and diatonic steps:
+```
 c_sharp4 = middle_c + ChromaticStep{1}   # One semitone up
 c_sharp4 = middle_c + ChromaticStep{-1}  # One semitone down
 d4 = middle_c + DiatonicStep{1}          # One letter name up
-b4 = middle_c + DiatonicStep{-1}         # One letter name up
+b4 = middle_c + DiatonicStep{-1}         # One letter name down
+```
 
-# Scales
+Scales:
+```
 c_major = Scale(MajorScale, PitchClass(C))
 d_minor = Scale(MinorScale, PitchClass(D))
 d_harmonic_minor = Scale(HarmonicMinorScale, PitchClass(D))
-
-# Access scale degrees
 tonic = c_major[ScaleDegree{1}]        # C
 dominant = c_major[ScaleDegree{5}]     # G
 leading_tone = c_major[ScaleDegree{7}] # B
 
-# Build triads from scales
+Chords (limited support so far; more coming soon):
+```
 c_triad = triad(c_major, ScaleDegree{1})  # C major triad
 d_triad = triad(c_major, ScaleDegree{2})  # D minor triad
+```
 
-# Conversion to MIDI note numbers
+Conversion to MIDI note numbers
+```
 midi_middle_c = semitone(middle_c)  # 60
 midi_a440 = semitone(Pitch(A, 4))   # 69
 ```
