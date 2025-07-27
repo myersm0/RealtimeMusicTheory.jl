@@ -37,6 +37,11 @@ e_flat4 = middle_c + m3  # minor third
 g4 = middle_c + P5       # perfect fifth
 c5 = middle_c + P8       # octave
 ```
+Shorthands M3, P8, etc are defined for common intervals up through P8 (a perfect 8th AKA octave), but you can specify arbitrary intervals via this slightly more verbose syntax:
+```
+d5 = middle_c + Interval(9, Major)
+c6 = middle_c + Interval(16, Perfect)
+```
 
 Chromatic and diatonic steps:
 ```
