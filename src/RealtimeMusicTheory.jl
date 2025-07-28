@@ -2,7 +2,7 @@ module RealtimeMusicTheory
 
 include("pitches.jl")
 export Accidental, Natural, Sharp, Flat, DoubleSharp, DoubleFlat, ♮, ♯, ♭, 𝄪, 𝄫
-export PitchClass, Pitch, letter, accidental, register, pitch_class
+export LetterName, PitchClass, Pitch, letter, accidental, register, pitch_class
 export C♮, C♯, D♭, D♮, D♯, E♭, E♮, E♯, F♭, F♮, F♯, G♭, G♮, G♯, A♭, A♮, A♯, B♭, B♮, B♯, C♭
 export C, D, E, F, G, A, B
 
