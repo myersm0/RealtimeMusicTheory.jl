@@ -32,10 +32,10 @@ d_flat = Pitch(D, Flat, 4)    # or Pitch(D, ♭, 4) or Pitch(D♭, 4)
 
 Interval arithmetic:
 ```
-e4 = middle_c + M3       # major third
-e_flat4 = middle_c + m3  # minor third
-g4 = middle_c + P5       # perfect fifth
-c5 = middle_c + P8       # octave
+middle_c + M3  # major third (E)
+middle_c + m3  # minor third (E-flat)
+middle_c + P5  # perfect fifth (G)
+middle_c + P8  # octave (C)
 ```
 Shorthands M3, P8, etc are defined for common intervals up through P8 (a perfect 8th AKA octave), but you can specify arbitrary intervals via this slightly more verbose syntax:
 ```
@@ -45,20 +45,27 @@ c6 = middle_c + Interval(15, Perfect)
 
 Chromatic and diatonic steps:
 ```
-c_sharp4 = middle_c + ChromaticStep(1)   # one semitone up
-c_sharp4 = middle_c + ChromaticStep(-1)  # one semitone down
-d4 = middle_c + DiatonicStep(1)          # one letter name up
-b4 = middle_c + DiatonicStep(-1)         # one letter name down
+middle_c + ChromaticStep(1)   # one semitone up (C#)
+middle_c + ChromaticStep(-1)  # one semitone down (B)
+middle_c + DiatonicStep(1)    # one letter name up (D)
+middle_c + DiatonicStep(-1)   # one letter name down (B)
 ```
 
 Scales:
 ```
 c_major = Scale(MajorScale, PitchClass(C))
-d_minor = Scale(MinorScale, PitchClass(D))
+d_minor = Scale(NaturalMinorScale, PitchClass(D))
 d_harmonic_minor = Scale(HarmonicMinorScale, PitchClass(D))
-tonic = c_major[ScaleDegree(1)]        # C
-dominant = c_major[ScaleDegree(5)]     # G
-leading_tone = c_major[ScaleDegree(7)] # B
+d_melodmic_minor = Scale(MelodicMinorScale, PitchClass(D))
+
+c_major[ScaleDegree(1)]  # C
+c_major[ScaleDegree(5)]  # G
+c_major[ScaleDegree(7)]  # B
+
+# or equivalently:
+c_major[Tonic]
+c_major[Dominant]
+c_major[LeadingTone]
 ```
 
 Chords (limited support so far; more coming soon):
