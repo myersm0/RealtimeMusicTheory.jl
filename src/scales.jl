@@ -87,6 +87,8 @@ end
 
 struct ScaleDegree{N} end
 
+ScaleDegree(n::Int) = ScaleDegree{n}
+
 # Functional names
 abstract type ScaleFunction end
 struct Tonic <: ScaleFunction end

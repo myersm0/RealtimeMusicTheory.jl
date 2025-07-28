@@ -12,12 +12,15 @@ abstract type Step end
 
 # Chromatic steps (semitones)
 struct ChromaticStep{N} <: Step end
+ChromaticStep(n) = ChromaticStep{n}
 
 # Diatonic steps (letter names)
 struct DiatonicStep{N} <: Step end
+DiatonicStep(n) = DiatonicStep{n}
 
 # Generic interval (will be defined as scale steps)
 struct GenericInterval{N} <: Step end
+GenericInterval(n) = GenericInterval{n}
 
 # Common aliases
 const Semitone = ChromaticStep{1}

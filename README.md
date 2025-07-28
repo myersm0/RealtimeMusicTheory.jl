@@ -45,10 +45,10 @@ c6 = middle_c + Interval(15, Perfect)
 
 Chromatic and diatonic steps:
 ```
-c_sharp4 = middle_c + ChromaticStep{1}   # one semitone up
-c_sharp4 = middle_c + ChromaticStep{-1}  # one semitone down
-d4 = middle_c + DiatonicStep{1}          # one letter name up
-b4 = middle_c + DiatonicStep{-1}         # one letter name down
+c_sharp4 = middle_c + ChromaticStep(1)   # one semitone up
+c_sharp4 = middle_c + ChromaticStep(-1)  # one semitone down
+d4 = middle_c + DiatonicStep(1)          # one letter name up
+b4 = middle_c + DiatonicStep(-1)         # one letter name down
 ```
 
 Scales:
@@ -56,15 +56,15 @@ Scales:
 c_major = Scale(MajorScale, PitchClass(C))
 d_minor = Scale(MinorScale, PitchClass(D))
 d_harmonic_minor = Scale(HarmonicMinorScale, PitchClass(D))
-tonic = c_major[ScaleDegree{1}]        # C
-dominant = c_major[ScaleDegree{5}]     # G
-leading_tone = c_major[ScaleDegree{7}] # B
+tonic = c_major[ScaleDegree(1)]        # C
+dominant = c_major[ScaleDegree(5)]     # G
+leading_tone = c_major[ScaleDegree(7)] # B
 ```
 
 Chords (limited support so far; more coming soon):
 ```
-c_triad = triad(c_major, ScaleDegree{1})  # C major triad
-d_triad = triad(c_major, ScaleDegree{2})  # d minor triad
+c_triad = triad(c_major, ScaleDegree(1))  # C major triad
+d_triad = triad(c_major, ScaleDegree(2))  # d minor triad
 ```
 
 Conversion to MIDI note numbers
