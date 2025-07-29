@@ -1,13 +1,4 @@
 
-# Pitch space types
-abstract type PitchSpace end
-struct DiatonicSpace <: PitchSpace end
-struct ChromaticSpace <: PitchSpace end
-
-Base.length(::Type{DiatonicSpace}) = 7
-Base.length(::Type{ChromaticSpace}) = 12
-
-# Step types
 abstract type Step end
 abstract type SimpleStep <: Step end
 abstract type MusicalStep <: Step end
