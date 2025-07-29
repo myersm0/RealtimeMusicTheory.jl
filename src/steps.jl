@@ -32,7 +32,14 @@ struct GenericInterval{N} <: MusicalStep end
 GenericInterval(n) = GenericInterval{n}
 
 struct SpecificInterval{Number, Quality <: IntervalQuality} <: MusicalStep end
-SpecificInterval(n::Int, quality::Type{Q}) where Q <: IntervalQuality = SpecificInterval{n, quality}
+
+function SpecificInterval(n::Int, quality::Type{Q}) where Q <: IntervalQuality
+	# validate interval/quality combination
+	simple = mod1(n, 7)
+	(Q == Perfect && !(simple in [1, 4, 5])) && error("Perfect quality only valid for unison, 4th, 5th, and octave")
+	(Q in [Major, Minor] && !(simple in [2, 3, 6, 7])) && error("Major/minor quality only valid for 2nd, 3rd, 6th, 7th")
+	return SpecificInterval{n, Q}
+end
 
 # Common aliases
 const Semitone = ChromaticStep{1}
