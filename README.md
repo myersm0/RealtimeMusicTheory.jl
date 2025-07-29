@@ -1,11 +1,11 @@
 # RealtimeMusicTheory
 Fast, compile-time music theory primitives to support real-time audio applications in Julia.
-- Zero allocations for core operations
+- Zero allocations
 - Compile-time computation of intervals, scales, and chords
 - Type-stable throughout
 - Real-time safe - no garbage collection pauses
 
-What this means is that all operations are virtually _free_ at runtime -- less than 1 nanosecond on my machine. There is, however, a negligible precompilation overhead the first time you call a function with a given combination of types.
+What this means is that all operations are virtually _free_ at runtime -- less than 1 nanosecond on my machine. There is, however, a negligible compilation overhead the first time you call a function with a given combination of types.
 
 I'd like to acknowledge dpsanders's very nice package [MusicTheory.jl](https://github.com/JuliaMusic/MusicTheory.jl), on which the current API is largely based. I decided to rethink his implementation from the ground up, however, in the interest of maximizing performance to support a real-time music application I'm building.
 
@@ -58,7 +58,7 @@ Scales:
 c_major = Scale(MajorScale, PitchClass(C))
 d_minor = Scale(NaturalMinorScale, PitchClass(D))
 d_harmonic_minor = Scale(HarmonicMinorScale, PitchClass(D))
-d_melodmic_minor = Scale(MelodicMinorScale, PitchClass(D))
+d_melodic_minor = Scale(MelodicMinorScale, PitchClass(D))
 
 c_major[ScaleDegree(1)]  # C
 c_major[ScaleDegree(5)]  # G
