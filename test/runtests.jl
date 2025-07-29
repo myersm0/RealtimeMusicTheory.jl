@@ -117,16 +117,20 @@ import RealtimeMusicTheory.semitone
 		b_pitch_creation = @benchmark Pitch(C, 4)
 		@test median(b_pitch_creation.times) < 10  # nanoseconds
 		
-		b_interval_add = @benchmark $c + M3
-#		@test median(b_interval_add.times) < 10 # failed!
+		b_interval_add = @benchmark Pitch(C, 4) + M3
+		@test median(b_interval_add.times) < 10
 		
-		b_semitone = @benchmark semitone($c)
-#		@test median(b_semitone.times) < 10 # failed!
+		b_semitone = @benchmark semitone(Pitch(C, 4))
+		@test median(b_semitone.times) < 10
+
+		b_scale_creation = @benchmark Scale(MajorScale, PitchClass(C))
+		@test median(b_scale_creation.times) < 10
 		
 		# No allocations
 		@test b_pitch_creation.allocs == 0
 		@test b_interval_add.allocs == 0
 		@test b_semitone.allocs == 0
+		@test b_scale_creation.allocs == 0
 	end
 end
 
