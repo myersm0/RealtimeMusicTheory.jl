@@ -5,6 +5,8 @@ Fast, compile-time music theory primitives to support real-time audio applicatio
 - Type-stable throughout
 - Real-time safe - no garbage collection pauses
 
+What this means is that all operations are virtually _free_ at runtime -- less than 1 nanosecond on my machine. There is, however, a negligible precompilation overhead the first time you call a function with a given combination of types.
+
 I'd like to acknowledge dpsanders's very nice package [MusicTheory.jl](https://github.com/JuliaMusic/MusicTheory.jl), on which the current API is largely based. I decided to rethink his implementation from the ground up, however, in the interest of maximizing performance to support a real-time music application I'm building.
 
 ## Installation
