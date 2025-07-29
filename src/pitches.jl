@@ -114,28 +114,3 @@ function letter_step(::Type{L}, steps::Int) where {L <: LetterName}
 	return new_letter
 end
 
-# Add semitones to a pitch class
-function add_semitones(::Type{PitchClass{Letter, Acc}}, semitones::Int) where {Letter, Acc}
-	current_semi = chromatic_position(Letter) + offset(Acc)
-	target_semi = mod(current_semi + semitones, 12)
-	# Determine best spelling (prefer sharps when ascending, flats when descending)
-	spellings = [
-		(0, C, Natural),
-		(1, C, Sharp),
-		(2, D, Natural),
-		(3, D, Sharp),
-		(4, E, Natural),
-		(5, F, Natural),
-		(6, F, Sharp),
-		(7, G, Natural),
-		(8, G, Sharp),
-		(9, A, Natural),
-		(10, A, Sharp),
-		(11, B, Natural)
-	]
-	# Simple spelling for now - always use sharps (todo: improve this)
-	semi, letter, acc = spellings[target_semi + 1]
-	return PitchClass{letter, acc}
-end
-
-
