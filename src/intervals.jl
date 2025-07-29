@@ -6,7 +6,7 @@ struct Minor <: IntervalQuality end
 struct Augmented <: IntervalQuality end
 struct Diminished <: IntervalQuality end
 
-struct Interval{Number, Quality <: IntervalQuality} <: Step end
+struct Interval{Number, Quality <: IntervalQuality} <: MusicalStep end
 
 Interval(n::Int, quality::Type{Q}) where Q <: IntervalQuality = Interval{n, quality}
 

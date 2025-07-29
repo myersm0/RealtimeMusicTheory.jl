@@ -30,7 +30,7 @@ end
 	target_letter = letter_step(start_letter, N - 1)
 	
 	# calculate semitone distance
-	chromatic_step = to_chromatic_step(Interval{N, Q})
+	chromatic_step = ChromaticStep(Interval{N, Q})
 	semi_distance = chromatic_step.parameters[1]
 	
 	start_semi = mod(semitone(PC), 12)
@@ -132,8 +132,52 @@ end
 	return :(GenericInterval($(-N)))
 end
 
-Base.:-(p::Type{<:Pitch}, s::Type{<:Step}) = p + negate(s)
-Base.:-(pc::Type{<:PitchClass}, s::Type{<:Step}) = pc + negate(s)
+Base.:-(p::Type{<:Pitch}, s::Type{<:SimpleStep}) = p + negate(s)
+Base.:-(pc::Type{<:PitchClass}, s::Type{<:SimpleStep}) = pc + negate(s)
 
+@generated function Base.:-(::Type{PC}, ::Type{Interval{N, Q}}) where {PC <: PitchClass, N, Q}
+	start_letter = letter(PC)
+	# go down N-1 letter names
+	target_letter = letter_step(start_letter, -(N - 1))
+	# calculate semitone distance (negative)
+	chromatic_step = ChromaticStep(Interval{N, Q})
+	semi_distance = -(chromatic_step.parameters[1])
+	
+	start_semi = mod(semitone(PC), 12)
+	target_semi = mod(start_semi + semi_distance, 12)  # mod handles negative
+	
+	target_natural_semi = chromatic_position(target_letter)
+	offset = target_semi - target_natural_semi
+	
+	if offset > 2
+		offset -= 12
+	elseif offset < -2
+		offset += 12
+	end
+	
+	acc = offset == -2 ? DoubleFlat :
+		offset == -1 ? Flat :
+		offset == 0 ? Natural :
+		offset == 1 ? Sharp :
+		offset == 2 ? DoubleSharp :
+		error("Invalid accidental offset: $offset")
+	
+	return :(PitchClass{$target_letter, $acc})
+end
 
+# For Pitch, also handle register changes
+@generated function Base.:-(::Type{Pitch{PC, Reg}}, ::Type{Interval{N, Q}}) where {PC, Reg, N, Q}
+	new_pc = PC - Interval{N, Q}
+	
+	# calculate register change
+	start_letter = letter(PC)
+	letter_steps = -(N - 1)  # Negative for going down
+	start_pos = letter_position(start_letter)
+	
+	# going down: negative letter steps can decrease register
+	register_change = div(start_pos + letter_steps, 7)
+	new_reg = Reg + register_change
+
+	return :(Pitch{$new_pc, $new_reg})
+end
 
