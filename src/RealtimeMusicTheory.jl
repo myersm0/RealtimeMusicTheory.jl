@@ -19,6 +19,7 @@ export AbstractScale, DiatonicScale, ChromaticScale
 export MajorScale, MinorScale, NaturalMinorScale, MelodicMinorScale, HarmonicMinorScale
 export Scale, ScaleDegree, ScaleFunction
 export Tonic, Supertonic, Mediant, Subdominant, Dominant, Submediant, LeadingTone, SubTonic
+export tonic, supertonic, mediant, subdominant, dominant, submediant, leadingtone, subtonic
 export realize
 
 include("arithmetic.jl")

@@ -121,13 +121,13 @@ end
 end
 
 tonic(s::Type{Scale{PCs}}) where PCs = s[Tonic]
-supertonic(s::Type{Scale{PCs}}) where PCs = s[Tonic]
-mediant(s::Type{Scale{PCs}}) where PCs = s[Tonic]
-subdominant(s::Type{Scale{PCs}}) where PCs = s[Tonic]
-dominant(s::Type{Scale{PCs}}) where PCs = s[Tonic]
-submediant(s::Type{Scale{PCs}}) where PCs = s[Tonic]
-leadingtone(s::Type{Scale{PCs}}) where PCs = s[Tonic]
-subtonic(s::Type{Scale{PCs}}) where PCs = s[Tonic]
+supertonic(s::Type{Scale{PCs}}) where PCs = s[supertonic]
+mediant(s::Type{Scale{PCs}}) where PCs = s[mediant]
+subdominant(s::Type{Scale{PCs}}) where PCs = s[subdominant]
+dominant(s::Type{Scale{PCs}}) where PCs = s[dominant]
+submediant(s::Type{Scale{PCs}}) where PCs = s[submediant]
+leadingtone(s::Type{Scale{PCs}}) where PCs = s[leadingtone]
+subtonic(s::Type{Scale{PCs}}) where PCs = s[subtonic]
 
 @generated function realize(::Type{Scale{PCs}}, ::Type{Pitch{PC, Register}}) where {PCs, PC, Register}
 	start_pos = nothing
@@ -155,9 +155,12 @@ subtonic(s::Type{Scale{PCs}}) where PCs = s[Tonic]
 end
 
 function realize(s::Type{Scale{PCs}}, register::Int = 4) where PCs
-	return realize(s, Pitch(s[Tonic], register))
+	return realize(s, Pitch(tonic(s), register))
 end
 
+function realize(s::Type{Scale{PCs}}, ::Type{SF}, register::Int = 4) where {PCs, SF <: ScaleFunction}
+	return realize(s, Pitch(s[SF], register))
+end
 
 
 
