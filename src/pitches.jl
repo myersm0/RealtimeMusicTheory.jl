@@ -39,27 +39,43 @@ Pitch(::Type{L}, ::Type{A}, register::Int) where {L <: LetterName, A <: Accident
 Pitch(::Type{L}, register::Int) where {L <: LetterName} = 
 	Pitch{PitchClass{L, Natural}, register}
 
-const C♮ = PitchClass{C, Natural}
-const C♯ = PitchClass{C, Sharp}
-const D♭ = PitchClass{D, Flat}
-const D♮ = PitchClass{D, Natural}
-const D♯ = PitchClass{D, Sharp}
-const E♭ = PitchClass{E, Flat}
-const E♮ = PitchClass{E, Natural}
-const E♯ = PitchClass{E, Sharp}
-const F♭ = PitchClass{F, Flat}
-const F♮ = PitchClass{F, Natural}
-const F♯ = PitchClass{F, Sharp}
-const G♭ = PitchClass{G, Flat}
-const G♮ = PitchClass{G, Natural}
-const G♯ = PitchClass{G, Sharp}
-const A♭ = PitchClass{A, Flat}
-const A♮ = PitchClass{A, Natural}
-const A♯ = PitchClass{A, Sharp}
-const B♭ = PitchClass{B, Flat}
-const B♮ = PitchClass{B, Natural}
-const B♯ = PitchClass{B, Sharp}
-const C♭ = PitchClass{C, Flat}
+const C♮ = PitchClass(C, Natural)
+const C♯ = PitchClass(C, Sharp)
+const D♭ = PitchClass(D, Flat)
+const D♮ = PitchClass(D, Natural)
+const D♯ = PitchClass(D, Sharp)
+const E♭ = PitchClass(E, Flat)
+const E♮ = PitchClass(E, Natural)
+const E♯ = PitchClass(E, Sharp)
+const F♭ = PitchClass(F, Flat)
+const F♮ = PitchClass(F, Natural)
+const F♯ = PitchClass(F, Sharp)
+const G♭ = PitchClass(G, Flat)
+const G♮ = PitchClass(G, Natural)
+const G♯ = PitchClass(G, Sharp)
+const A♭ = PitchClass(A, Flat)
+const A♮ = PitchClass(A, Natural)
+const A♯ = PitchClass(A, Sharp)
+const B♭ = PitchClass(B, Flat)
+const B♮ = PitchClass(B, Natural)
+const B♯ = PitchClass(B, Sharp)
+const C♭ = PitchClass(C, Flat)
+
+# less common pitches that may be needed
+const F𝄫 = PitchClass(B, DoubleFlat)
+const C𝄫 = PitchClass(B, DoubleFlat)
+const G𝄫 = PitchClass(B, DoubleFlat)
+const E𝄫 = PitchClass(E, DoubleFlat)
+const A𝄫 = PitchClass(A, DoubleFlat)
+const D𝄫 = PitchClass(D, DoubleFlat)
+const D𝄫 = PitchClass(D, DoubleFlat)
+const F𝄪 = PitchClass(F, DoubleSharp)
+const C𝄪 = PitchClass(C, DoubleSharp)
+const G𝄪 = PitchClass(G, DoubleSharp)
+const D𝄪 = PitchClass(D, DoubleSharp)
+const A𝄪 = PitchClass(A, DoubleSharp)
+const E𝄪 = PitchClass(E, DoubleSharp)
+const B𝄪 = PitchClass(B, DoubleSharp)
 
 letter(::Type{PitchClass{L, A}}) where {L, A} = L
 accidental(::Type{PitchClass{L, A}}) where {L, A} = A
