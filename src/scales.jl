@@ -1,16 +1,17 @@
 
-abstract type AbstractScale end
-
-abstract type DiatonicScale <: AbstractScale end
+abstract type ScalePattern end
+abstract type DiatonicScale <: ScalePattern end
 struct MajorScale <: DiatonicScale end
 struct NaturalMinorScale <: DiatonicScale end
 struct HarmonicMinorScale <: DiatonicScale end
 struct MelodicMinorScale <: DiatonicScale end
-struct ChromaticScale <: AbstractScale end
+struct ChromaticScale <: ScalePattern end
 
 const MinorScale = NaturalMinorScale
 
-# Scale patterns (using chromatic steps)
+struct Scale{PCs <: Tuple} <: AbstractScale{PitchClass} end
+struct RealizedScale{Ps <: Tuple} <: AbstractScale{Pitch} end
+
 scale_pattern(::Type{MajorScale}) = (
 	ChromaticStep{2}, ChromaticStep{2}, ChromaticStep{1},
 	ChromaticStep{2}, ChromaticStep{2}, ChromaticStep{2}, ChromaticStep{1}
@@ -32,8 +33,6 @@ scale_pattern(::Type{MelodicMinorScale}) = (
 )
 
 scale_pattern(::Type{ChromaticScale}) = ntuple(_ -> ChromaticStep{1}, 11)
-
-struct Scale{PitchClasses <: Tuple} end
 
 @generated function Scale(::Type{ST}, ::Type{Root}) where {ST <: DiatonicScale, Root <: PitchClass}
 	pattern = scale_pattern(ST)
@@ -89,7 +88,6 @@ struct ScaleDegree{N} end
 
 ScaleDegree(n::Int) = ScaleDegree{n}
 
-# Functional names
 abstract type ScaleFunction end
 struct Tonic <: ScaleFunction end
 struct Supertonic <: ScaleFunction end
@@ -100,7 +98,6 @@ struct Submediant <: ScaleFunction end
 struct LeadingTone <: ScaleFunction end
 struct Subtonic <: ScaleFunction end
 
-# Map functions to degrees
 scale_degree(::Type{Tonic}) = ScaleDegree{1}
 scale_degree(::Type{Supertonic}) = ScaleDegree{2}
 scale_degree(::Type{Mediant}) = ScaleDegree{3}
@@ -122,4 +119,52 @@ end
 	pc = PCs.parameters[mod1(n, length(PCs.parameters))]
 	:($pc)
 end
+
+tonic(s::Type{Scale{PCs}}) where PCs = s[Tonic]
+supertonic(s::Type{Scale{PCs}}) where PCs = s[Tonic]
+mediant(s::Type{Scale{PCs}}) where PCs = s[Tonic]
+subdominant(s::Type{Scale{PCs}}) where PCs = s[Tonic]
+dominant(s::Type{Scale{PCs}}) where PCs = s[Tonic]
+submediant(s::Type{Scale{PCs}}) where PCs = s[Tonic]
+leadingtone(s::Type{Scale{PCs}}) where PCs = s[Tonic]
+subtonic(s::Type{Scale{PCs}}) where PCs = s[Tonic]
+
+@generated function realize(::Type{Scale{PCs}}, ::Type{Pitch{PC, Register}}) where {PCs, PC, Register}
+	start_pos = nothing
+	for (i, pc) in enumerate(PCs.parameters)
+		if pc == PC
+			start_pos = i - 1
+			break
+		end
+	end
+	!isnothing(start_pos) || error("Starting pitch not in scale")
+	pitches = Type[]
+	current_register = Register
+	last_pos = start_pos
+	for i in 0:length(PCs.parameters)-1
+		pos = mod(start_pos + i, length(PCs.parameters))
+		pc = PCs.parameters[pos + 1]
+		# check if we've wrapped around (gone up an octave)
+		if pos < last_pos
+			current_register += 1
+		end
+		last_pos = pos
+		push!(pitches, Pitch{pc, current_register})
+	end
+	return :(RealizedScale{Tuple{$(pitches...)}})
+end
+
+function realize(s::Type{Scale{PCs}}, register::Int = 4) where PCs
+	return realize(s, Pitch(s[Tonic], register))
+end
+
+
+
+
+
+
+
+
+
+
 
