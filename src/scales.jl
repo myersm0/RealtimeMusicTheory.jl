@@ -158,7 +158,7 @@ function realize(s::Type{Scale{PCs}}, register::Int = 4) where PCs
 	return realize(s, Pitch(tonic(s), register))
 end
 
-function realize(s::Type{Scale{PCs}}, ::Type{SF}, register::Int = 4) where {PCs, SF <: ScaleFunction}
+function realize(s::Type{Scale{PCs}}, ::Type{SF}, register::Int = 4) where {PCs, SF <: Union{ScaleDegree, ScaleFunction}}
 	return realize(s, Pitch(s[SF], register))
 end
 
