@@ -63,6 +63,9 @@ const C♭ = PitchClass{C, Flat}
 
 letter(::Type{PitchClass{L, A}}) where {L, A} = L
 accidental(::Type{PitchClass{L, A}}) where {L, A} = A
+register(::Type{PitchClass{L, A}}) where {L, A} = nothing
+pitch_class(::Type{PitchClass{L, A}}) where {L, A} = PitchClass(L, A)
+
 letter(::Type{Pitch{PC, Register}}) where {PC, Register} = letter(PC)
 accidental(::Type{Pitch{PC, Register}}) where {PC, Register} = accidental(PC)
 register(::Type{Pitch{PC, Register}}) where {PC, Register} = Register
