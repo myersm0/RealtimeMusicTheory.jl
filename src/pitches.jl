@@ -8,12 +8,15 @@ struct G <: LetterName end
 struct A <: LetterName end
 struct B <: LetterName end
 
-abstract type Accidental end
-struct Natural <: Accidental end
-struct Sharp <: Accidental end
-struct Flat <: Accidental end
-struct DoubleSharp <: Accidental end
-struct DoubleFlat <: Accidental end
+struct Accidental{Int} end
+Accidental(n::Int) = Accidental{n}
+offset(::Type{Accidental{N}}) where N = N
+
+const Natural = Accidental(0)
+const Sharp = Accidental(1)
+const Flat = Accidental(-1)
+const DoubleSharp = Accidental(2)
+const DoubleFlat = Accidental(-2)
 
 const ♮ = Natural
 const ♯ = Sharp
