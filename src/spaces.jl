@@ -156,6 +156,8 @@ number(::Type{LineOfFifths}, ::Type{PC}) where PC <: PitchClass =
 is_enharmonic(::Type{PC1}, ::Type{PC2}) where {PC1 <: PitchClass, PC2 <: PitchClass} = 
 	distance(LineOfFifths, PC1, PC2) == 12
 
+# todo: there's some duplication that could be reduced in move() defs
+
 function move(::Type{MS}, ::Type{L}, steps::Int) where {MS <: GenericSpace, L <: LetterName}
 	return move(MS, TopologyStyle(MS), L, steps)
 end
