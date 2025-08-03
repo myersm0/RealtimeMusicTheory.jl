@@ -22,6 +22,9 @@ number(::Type{LetterSpace}, ::Type{G♮}) = 4
 number(::Type{LetterSpace}, ::Type{A♮}) = 5
 number(::Type{LetterSpace}, ::Type{B♮}) = 6
 
+GenericPitchClass(::Type{PC}) where PC <: PitchClass = PitchClass(letter(PC))
+const GPC = GenericPitchClass
+
 struct PitchClassSpace <: MusicalSpace end
 PitchClass(n::Int) = PitchClass(PitchClassSpace, Val(n))
 PitchClass(::Type{PitchClassSpace}, n::Integer) = PitchClass(PitchClassSpace, Val(n))
@@ -54,20 +57,6 @@ number(::Type{PitchClassSpace}, ::Type{B♮}) = 11
 
 struct LineOfFifths <: MusicalSpace end
 PitchClass(::Type{LineOfFifths}, n::Integer) = PitchClass(LineOfFifths, Val(n))
-PitchClass(::Type{LineOfFifths}, ::Val{-17}) = F𝄫
-PitchClass(::Type{LineOfFifths}, ::Val{-16}) = C𝄫
-PitchClass(::Type{LineOfFifths}, ::Val{-15}) = G𝄫
-PitchClass(::Type{LineOfFifths}, ::Val{-14}) = D𝄫
-PitchClass(::Type{LineOfFifths}, ::Val{-13}) = A𝄫
-PitchClass(::Type{LineOfFifths}, ::Val{-12}) = E𝄫
-PitchClass(::Type{LineOfFifths}, ::Val{-11}) = B𝄫
-PitchClass(::Type{LineOfFifths}, ::Val{-10}) = F♭
-PitchClass(::Type{LineOfFifths}, ::Val{-9}) = C♭
-PitchClass(::Type{LineOfFifths}, ::Val{-8}) = G♭
-PitchClass(::Type{LineOfFifths}, ::Val{-7}) = D♭
-PitchClass(::Type{LineOfFifths}, ::Val{-6}) = A♭
-PitchClass(::Type{LineOfFifths}, ::Val{-5}) = E♭
-PitchClass(::Type{LineOfFifths}, ::Val{-4}) = B♭
 PitchClass(::Type{LineOfFifths}, ::Val{-3}) = F♮
 PitchClass(::Type{LineOfFifths}, ::Val{-2}) = C♮
 PitchClass(::Type{LineOfFifths}, ::Val{-1}) = G♮
@@ -75,35 +64,19 @@ PitchClass(::Type{LineOfFifths}, ::Val{0}) = D♮
 PitchClass(::Type{LineOfFifths}, ::Val{1}) = A♮
 PitchClass(::Type{LineOfFifths}, ::Val{2}) = E♮
 PitchClass(::Type{LineOfFifths}, ::Val{3}) = B♮
-PitchClass(::Type{LineOfFifths}, ::Val{4}) = F♯
-PitchClass(::Type{LineOfFifths}, ::Val{5}) = C♯
-PitchClass(::Type{LineOfFifths}, ::Val{6}) = G♯
-PitchClass(::Type{LineOfFifths}, ::Val{7}) = D♯
-PitchClass(::Type{LineOfFifths}, ::Val{8}) = A♯
-PitchClass(::Type{LineOfFifths}, ::Val{9}) = E♯
-PitchClass(::Type{LineOfFifths}, ::Val{10}) = B♯
-PitchClass(::Type{LineOfFifths}, ::Val{11}) = F𝄪
-PitchClass(::Type{LineOfFifths}, ::Val{12}) = C𝄪
-PitchClass(::Type{LineOfFifths}, ::Val{13}) = G𝄪
-PitchClass(::Type{LineOfFifths}, ::Val{14}) = D𝄪
-PitchClass(::Type{LineOfFifths}, ::Val{15}) = A𝄪
-PitchClass(::Type{LineOfFifths}, ::Val{16}) = E𝄪
-PitchClass(::Type{LineOfFifths}, ::Val{17}) = B𝄪
+@generated function PitchClass(::Type{LineOfFifths}, ::Val{N}) where {N}
+	base_position = mod(N, 7)
+	if base_position > 3
+		base_position -= 7
+	end
+	accidental_offset = (N - base_position) ÷ 7
+	return quote
+		base_pc = PitchClass(LineOfFifths, Val($base_position))
+		PitchClass(letter(base_pc), Accidental($accidental_offset))
+	end
+end
+
 number(::Type{LineOfFifths}, n::Integer) = PitchClass(LineOfFifths, Val(n))
-number(::Type{LineOfFifths}, ::Type{F𝄫}) = -17
-number(::Type{LineOfFifths}, ::Type{C𝄫}) = -16
-number(::Type{LineOfFifths}, ::Type{G𝄫}) = -15
-number(::Type{LineOfFifths}, ::Type{D𝄫}) = -14
-number(::Type{LineOfFifths}, ::Type{A𝄫}) = -13
-number(::Type{LineOfFifths}, ::Type{E𝄫}) = -12
-number(::Type{LineOfFifths}, ::Type{B𝄫}) = -11
-number(::Type{LineOfFifths}, ::Type{F♭}) = -10
-number(::Type{LineOfFifths}, ::Type{C♭}) = -9
-number(::Type{LineOfFifths}, ::Type{G♭}) = -8
-number(::Type{LineOfFifths}, ::Type{D♭}) = -7
-number(::Type{LineOfFifths}, ::Type{A♭}) = -6
-number(::Type{LineOfFifths}, ::Type{E♭}) = -5
-number(::Type{LineOfFifths}, ::Type{B♭}) = -4
 number(::Type{LineOfFifths}, ::Type{F♮}) = -3
 number(::Type{LineOfFifths}, ::Type{C♮}) = -2
 number(::Type{LineOfFifths}, ::Type{G♮}) = -1
@@ -111,20 +84,8 @@ number(::Type{LineOfFifths}, ::Type{D♮}) = 0
 number(::Type{LineOfFifths}, ::Type{A♮}) = 1
 number(::Type{LineOfFifths}, ::Type{E♮}) = 2
 number(::Type{LineOfFifths}, ::Type{B♮}) = 3
-number(::Type{LineOfFifths}, ::Type{F♯}) = 4
-number(::Type{LineOfFifths}, ::Type{C♯}) = 5
-number(::Type{LineOfFifths}, ::Type{G♯}) = 6
-number(::Type{LineOfFifths}, ::Type{D♯}) = 7
-number(::Type{LineOfFifths}, ::Type{A♯}) = 8
-number(::Type{LineOfFifths}, ::Type{E♯}) = 9
-number(::Type{LineOfFifths}, ::Type{B♯}) = 10
-number(::Type{LineOfFifths}, ::Type{F𝄪}) = 11
-number(::Type{LineOfFifths}, ::Type{C𝄪}) = 12
-number(::Type{LineOfFifths}, ::Type{G𝄪}) = 13
-number(::Type{LineOfFifths}, ::Type{D𝄪}) = 14
-number(::Type{LineOfFifths}, ::Type{A𝄪}) = 15
-number(::Type{LineOfFifths}, ::Type{E𝄪}) = 16
-number(::Type{LineOfFifths}, ::Type{B𝄪}) = 17
+number(::Type{LineOfFifths}, ::Type{PC}) where PC <: PitchClass = 
+	number(LineOfFifths, GPC(PC)) + offset(accidental(PC)) * 7
 
 is_enharmonic(::Type{PC1}, ::Type{PC2}) where {PC1 <: PitchClass, PC2 <: PitchClass} = 
 	distance(LineOfFifths, PC1, PC2) == 12
