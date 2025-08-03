@@ -22,9 +22,6 @@ number(::Type{LetterSpace}, ::Type{G♮}) = 4
 number(::Type{LetterSpace}, ::Type{A♮}) = 5
 number(::Type{LetterSpace}, ::Type{B♮}) = 6
 
-GenericPitchClass(::Type{PC}) where PC <: PitchClass = PitchClass(letter(PC))
-const GPC = GenericPitchClass
-
 struct PitchClassSpace <: MusicalSpace end
 PitchClass(n::Int) = PitchClass(PitchClassSpace, Val(n))
 PitchClass(::Type{PitchClassSpace}, n::Integer) = PitchClass(PitchClassSpace, Val(n))
@@ -66,16 +63,13 @@ PitchClass(::Type{LineOfFifths}, ::Val{2}) = E♮
 PitchClass(::Type{LineOfFifths}, ::Val{3}) = B♮
 @generated function PitchClass(::Type{LineOfFifths}, ::Val{N}) where {N}
 	base_position = mod(N, 7)
-	if base_position > 3
-		base_position -= 7
-	end
+	base_position > 3 && (base_position -= 7)
 	accidental_offset = (N - base_position) ÷ 7
 	return quote
 		base_pc = PitchClass(LineOfFifths, Val($base_position))
 		PitchClass(letter(base_pc), Accidental($accidental_offset))
 	end
 end
-
 number(::Type{LineOfFifths}, n::Integer) = PitchClass(LineOfFifths, Val(n))
 number(::Type{LineOfFifths}, ::Type{F♮}) = -3
 number(::Type{LineOfFifths}, ::Type{C♮}) = -2

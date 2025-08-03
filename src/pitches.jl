@@ -90,6 +90,9 @@ accidental(::Type{Pitch{PC, Register}}) where {PC, Register} = accidental(PC)
 register(::Type{Pitch{PC, Register}}) where {PC, Register} = Register
 pitch_class(::Type{Pitch{PC, Register}}) where {PC, Register} = PC
 
+GenericPitchClass(::Type{PC}) where PC <: PitchClass = PitchClass(letter(PC))
+const GPC = GenericPitchClass
+
 letter_position(::Type{C}) = 0
 letter_position(::Type{D}) = 1
 letter_position(::Type{E}) = 2
@@ -105,12 +108,6 @@ chromatic_position(::Type{F}) = 5
 chromatic_position(::Type{G}) = 7
 chromatic_position(::Type{A}) = 9
 chromatic_position(::Type{B}) = 11
-
-offset(::Type{Natural}) = 0
-offset(::Type{Sharp}) = 1
-offset(::Type{Flat}) = -1
-offset(::Type{DoubleSharp}) = 2
-offset(::Type{DoubleFlat}) = -2
 
 # Total semitones for a pitch class
 @generated function semitone(::Type{PitchClass{L, A}}) where {L, A}
