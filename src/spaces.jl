@@ -18,6 +18,11 @@ abstract type CircularDirection end
 struct Clockwise <: CircularDirection end
 struct Counterclockwise <: CircularDirection end
 
+Base.:*(::Type{Left}, x::Any) = -1 * x
+Base.:*(::Type{Right}, x::Any) = 1 * x
+Base.:*(::Type{Clockwise}, x::Any) = 1 * x
+Base.:*(::Type{Counterclockwise}, x::Any) = -1 * x
+
 function distance(
 		::Type{MS}, ::Type{T1}, ::Type{T2}
 	) where {MS <: MusicalSpace, T1 <: Union{LetterName, PitchClass}, T2 <: Union{LetterName, PitchClass}}
@@ -155,6 +160,13 @@ number(::Type{LineOfFifths}, ::Type{PC}) where PC <: PitchClass =
 
 is_enharmonic(::Type{PC1}, ::Type{PC2}) where {PC1 <: PitchClass, PC2 <: PitchClass} = 
 	distance(LineOfFifths, PC1, PC2) == 12
+
+
+struct 
+
+
+
+
 
 # todo: there's some duplication that could be reduced in move() defs
 
