@@ -91,6 +91,50 @@ number(::Type{LetterSpace}, ::Type{G}) = 4
 number(::Type{LetterSpace}, ::Type{A}) = 5
 number(::Type{LetterSpace}, ::Type{B}) = 6
 
+struct GenericFifthsSpace <: GenericSpace end
+Base.IteratorSize(::Type{<:GenericFifthsSpace}) = Base.HasLength()
+Base.isfinite(::Type{GenericFifthsSpace}) = true
+Base.size(::Type{GenericFifthsSpace}) = 7
+TopologyStyle(::Type{GenericFifthsSpace}) = Circular
+LetterName(::Type{GenericFifthsSpace}, n::Integer) = LetterName(GenericFifthsSpace, Val(mod(n, 7)))
+LetterName(::Type{GenericFifthsSpace}, ::Val{0}) = C
+LetterName(::Type{GenericFifthsSpace}, ::Val{1}) = G
+LetterName(::Type{GenericFifthsSpace}, ::Val{2}) = D
+LetterName(::Type{GenericFifthsSpace}, ::Val{3}) = A
+LetterName(::Type{GenericFifthsSpace}, ::Val{4}) = E
+LetterName(::Type{GenericFifthsSpace}, ::Val{5}) = B
+LetterName(::Type{GenericFifthsSpace}, ::Val{6}) = F
+number(::Type{GenericFifthsSpace}, ::Type{PC}) where PC <: PitchClass = number(GenericFifthsSpace, GPC(PC))
+number(::Type{GenericFifthsSpace}, ::Type{C}) = 0
+number(::Type{GenericFifthsSpace}, ::Type{G}) = 1
+number(::Type{GenericFifthsSpace}, ::Type{D}) = 2
+number(::Type{GenericFifthsSpace}, ::Type{A}) = 3
+number(::Type{GenericFifthsSpace}, ::Type{E}) = 4
+number(::Type{GenericFifthsSpace}, ::Type{B}) = 5
+number(::Type{GenericFifthsSpace}, ::Type{F}) = 6
+
+struct GenericThirdsSpace <: GenericSpace end
+Base.IteratorSize(::Type{<:GenericThirdsSpace}) = Base.HasLength()
+Base.isfinite(::Type{GenericThirdsSpace}) = true
+Base.size(::Type{GenericThirdsSpace}) = 7
+TopologyStyle(::Type{GenericThirdsSpace}) = Circular
+LetterName(::Type{GenericThirdsSpace}, n::Integer) = LetterName(GenericThirdsSpace, Val(mod(n, 7)))
+LetterName(::Type{GenericThirdsSpace}, ::Val{0}) = C
+LetterName(::Type{GenericThirdsSpace}, ::Val{1}) = E
+LetterName(::Type{GenericThirdsSpace}, ::Val{2}) = G
+LetterName(::Type{GenericThirdsSpace}, ::Val{3}) = B
+LetterName(::Type{GenericThirdsSpace}, ::Val{4}) = D
+LetterName(::Type{GenericThirdsSpace}, ::Val{5}) = F
+LetterName(::Type{GenericThirdsSpace}, ::Val{6}) = A
+number(::Type{GenericThirdsSpace}, ::Type{PC}) where PC <: PitchClass = number(GenericThirdsSpace, GPC(PC))
+number(::Type{GenericThirdsSpace}, ::Type{C}) = 0
+number(::Type{GenericThirdsSpace}, ::Type{E}) = 1
+number(::Type{GenericThirdsSpace}, ::Type{G}) = 2
+number(::Type{GenericThirdsSpace}, ::Type{B}) = 3
+number(::Type{GenericThirdsSpace}, ::Type{D}) = 4
+number(::Type{GenericThirdsSpace}, ::Type{F}) = 5
+number(::Type{GenericThirdsSpace}, ::Type{A}) = 6
+
 # todo: allow enharmonic equivalents
 struct PitchClassSpace <: SignedSpace end
 Base.IteratorSize(::Type{<:PitchClassSpace}) = Base.HasLength()
@@ -158,12 +202,44 @@ number(::Type{LineOfFifths}, ::Type{B♮}) = 3
 number(::Type{LineOfFifths}, ::Type{PC}) where PC <: PitchClass = 
 	number(LineOfFifths, GPC(PC)) + offset(accidental(PC)) * 7
 
+# todo: allow enharmonic equivalents
+struct CircleOfFifths <: SignedSpace end
+Base.IteratorSize(::Type{<:CircleOfFifths}) = Base.HasLength()
+Base.isfinite(::Type{CircleOfFifths}) = true
+Base.size(::Type{CircleOfFifths}) = 12
+TopologyStyle(::Type{CircleOfFifths}) = Circular
+PitchClass(::Type{CircleOfFifths}, n::Integer) = PitchClass(CircleOfFifths, Val(n))
+PitchClass(::Type{CircleOfFifths}, ::Val{0}) = C♮
+PitchClass(::Type{CircleOfFifths}, ::Val{1}) = G♮
+PitchClass(::Type{CircleOfFifths}, ::Val{2}) = D♮
+PitchClass(::Type{CircleOfFifths}, ::Val{3}) = A♮
+PitchClass(::Type{CircleOfFifths}, ::Val{4}) = E♮
+PitchClass(::Type{CircleOfFifths}, ::Val{5}) = B♮
+PitchClass(::Type{CircleOfFifths}, ::Val{6}) = F♯
+PitchClass(::Type{CircleOfFifths}, ::Val{7}) = C♯
+PitchClass(::Type{CircleOfFifths}, ::Val{8}) = G♯
+PitchClass(::Type{CircleOfFifths}, ::Val{9}) = D♯
+PitchClass(::Type{CircleOfFifths}, ::Val{10}) = A♯
+PitchClass(::Type{CircleOfFifths}, ::Val{11}) = F♮
+number(::Type{PC}) where PC <: PitchClass = number(CircleOfFifths, PC)
+number(::Type{CircleOfFifths}, ::Type{C♮}) = 0
+number(::Type{CircleOfFifths}, ::Type{G♮}) = 1
+number(::Type{CircleOfFifths}, ::Type{D♮}) = 2
+number(::Type{CircleOfFifths}, ::Type{A♮}) = 3
+number(::Type{CircleOfFifths}, ::Type{E♮}) = 4
+number(::Type{CircleOfFifths}, ::Type{B♮}) = 5
+number(::Type{CircleOfFifths}, ::Type{F♯}) = 6
+number(::Type{CircleOfFifths}, ::Type{C♯}) = 7
+number(::Type{CircleOfFifths}, ::Type{G♯}) = 8
+number(::Type{CircleOfFifths}, ::Type{D♯}) = 9
+number(::Type{CircleOfFifths}, ::Type{A♯}) = 10
+number(::Type{CircleOfFifths}, ::Type{F♮}) = 11
+
+
+## ops that leverage the spaces above to determine a useful property/quantity
+
 is_enharmonic(::Type{PC1}, ::Type{PC2}) where {PC1 <: PitchClass, PC2 <: PitchClass} = 
 	distance(LineOfFifths, PC1, PC2) == 12
-
-
-struct 
-
 
 
 
