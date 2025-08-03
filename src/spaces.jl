@@ -1,10 +1,12 @@
 
 abstract type MusicalSpace end
+abstract type GenericSpace <: MusicalSpace end
+abstract type SignedSpace <: MusicalSpace end
 
 distance(::Type{MS}, ::Type{PC1}, ::Type{PC2}) where {MS <: MusicalSpace, PC1 <: PitchClass, PC2 <: PitchClass} = 
 	abs(number(MS, PC2) - number(MS, PC1))
 
-struct LetterSpace <: MusicalSpace end
+struct LetterSpace <: GenericSpace end
 LetterName(::Type{LetterSpace}, n::Integer) = LetterName(LetterSpace, Val(n))
 LetterName(::Type{LetterSpace}, ::Val{0}) = C
 LetterName(::Type{LetterSpace}, ::Val{1}) = D
@@ -22,7 +24,7 @@ number(::Type{LetterSpace}, ::Type{G♮}) = 4
 number(::Type{LetterSpace}, ::Type{A♮}) = 5
 number(::Type{LetterSpace}, ::Type{B♮}) = 6
 
-struct PitchClassSpace <: MusicalSpace end
+struct PitchClassSpace <: SignedSpace end
 PitchClass(n::Int) = PitchClass(PitchClassSpace, Val(n))
 PitchClass(::Type{PitchClassSpace}, n::Integer) = PitchClass(PitchClassSpace, Val(n))
 PitchClass(::Type{PitchClassSpace}, ::Val{0}) = C♮
@@ -52,7 +54,7 @@ number(::Type{PitchClassSpace}, ::Type{A♯}) = 10
 number(::Type{PitchClassSpace}, ::Type{B♮}) = 11
 
 
-struct LineOfFifths <: MusicalSpace end
+struct LineOfFifths <: SignedSpace end
 PitchClass(::Type{LineOfFifths}, n::Integer) = PitchClass(LineOfFifths, Val(n))
 PitchClass(::Type{LineOfFifths}, ::Val{-3}) = F♮
 PitchClass(::Type{LineOfFifths}, ::Val{-2}) = C♮
@@ -83,7 +85,6 @@ number(::Type{LineOfFifths}, ::Type{PC}) where PC <: PitchClass =
 
 is_enharmonic(::Type{PC1}, ::Type{PC2}) where {PC1 <: PitchClass, PC2 <: PitchClass} = 
 	distance(LineOfFifths, PC1, PC2) == 12
-
 
 
 
