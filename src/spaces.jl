@@ -246,30 +246,30 @@ is_enharmonic(::Type{PC1}, ::Type{PC2}) where {PC1 <: PitchClass, PC2 <: PitchCl
 
 # todo: there's some duplication that could be reduced in move() defs
 
-function move(::Type{MS}, ::Type{L}, steps::Int) where {MS <: GenericSpace, L <: LetterName}
+function move(::Type{MS}, ::Type{L}, steps::Integer) where {MS <: GenericSpace, L <: LetterName}
 	return move(MS, TopologyStyle(MS), L, steps)
 end
 
-function move(::Type{MS}, ::Type{PC}, steps::Int) where {MS <: SignedSpace, PC <: PitchClass}
+function move(::Type{MS}, ::Type{PC}, steps::Integer) where {MS <: SignedSpace, PC <: PitchClass}
 	return move(MS, TopologyStyle(MS), PC, steps)
 end
 
-function move(::Type{MS}, ::Type{Circular}, ::Type{L}, steps::Int) where {MS <: GenericSpace, L}
+function move(::Type{MS}, ::Type{Circular}, ::Type{L}, steps::Integer) where {MS <: GenericSpace, L}
 	new_pos = mod(number(MS, L) + steps, size(MS))
 	return LetterName(MS, new_pos)
 end
 
-function move(::Type{MS}, ::Type{Linear}, ::Type{L}, steps::Int) where {MS <: GenericSpace, L}
+function move(::Type{MS}, ::Type{Linear}, ::Type{L}, steps::Integer) where {MS <: GenericSpace, L}
 	new_pos = number(MS, L) + steps
 	return LetterName(MS, new_pos)
 end
 
-function move(::Type{MS}, ::Type{Circular}, ::Type{PC}, steps::Int) where {MS <: SignedSpace, PC}
+function move(::Type{MS}, ::Type{Circular}, ::Type{PC}, steps::Integer) where {MS <: SignedSpace, PC}
 	new_pos = mod(number(MS, PC) + steps, size(MS))
 	return PitchClass(MS, new_pos)
 end
 
-function move(::Type{MS}, ::Type{Linear}, ::Type{PC}, steps::Int) where {MS <: SignedSpace, PC}
+function move(::Type{MS}, ::Type{Linear}, ::Type{PC}, steps::Integer) where {MS <: SignedSpace, PC}
 	new_pos = number(MS, PC) + steps
 	return PitchClass(MS, new_pos)
 end
