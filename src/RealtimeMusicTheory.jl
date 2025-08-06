@@ -8,7 +8,10 @@ export C♮, C♯, D♭, D♮, D♯, E♭, E♮, E♯, F♭, F♮, F♯, G♭, G
 export C𝄫, D𝄫, E𝄫, F𝄫, G𝄫, A𝄫, B𝄫, C𝄪, D𝄪, E𝄪, F𝄪, G𝄪, A𝄪, B𝄪
 export C, D, E, F, G, A, B
 
-include("spaces.jl")
+include("traits.jl")
+
+include("space_defs.jl")
+include("space_ops.jl")
 export MusicalSpace, GenericSpace, SignedSpace
 export TopologyStyle, Linear, Circular
 export Direction, LinearDirection, Left, Right, CircularDirection, Clockwise, Counterclockwise

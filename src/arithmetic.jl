@@ -1,183 +1,277 @@
 
-@generated function Base.:+(::Type{PC}, ::Type{ChromaticStep{N}}) where {PC <: PitchClass, N}
-	N == 0 && return PC
-	if N > 0
-		spellings = [C♮, C♯, D♮, D♯, E♮, F♮, F♯, G♮, G♯, A♮, A♯, B♮]
-	else 
-		spellings = [C♮, D♭, D♮, E♭, E♮, F♮, G♭, G♮, A♭, A♮, B♭, B♮]
-	end
+function Base.:+(::Type{L}, ::Type{GenericInterval{N}}) where {L <: LetterName, N}
+	return move(LetterSpace, L, N)
+end
+
+# todo: should this return a PC?
+function Base.:+(::Type{PC}, ::Type{GenericInterval{N}}) where {PC <: PitchClass, N}
+	return move(LetterSpace, letter(PC), N)
+end
+
+# todo: should it be move's responsibility to spell correctly?
+
+# for intervals 2, 3, 6, 7 (i.e. where major and minor qualities exist), 
+# minor denotes -1, diminished -2, and augmented +1, relative to major;
+# for intervals 1, 4, 5, 8 (i.e. ones where perfect quality exists),
+# diminished denotes - 1, augmenting denotes + 1
+# note that MusicTheory.jl is incorrect re: diminished seconds
+
+# base semitones for a major or perfect interval as appropriate
+base(::Type{Interval{1, Quality}}) where Quality = 0
+base(::Type{Interval{2, Quality}}) where Quality = 2
+base(::Type{Interval{3, Quality}}) where Quality = 4
+base(::Type{Interval{4, Quality}}) where Quality = 5
+base(::Type{Interval{5, Quality}}) where Quality = 7
+base(::Type{Interval{6, Quality}}) where Quality = 9
+base(::Type{Interval{7, Quality}}) where Quality = 11
+base(::Type{Interval{8, Quality}}) where Quality = 12
+
+# how many semitones to shift from interval's base, as a function of quality
+offset(::Type{Interval{N, Minor}}) where N = N in [2, 3, 6, 7] ? -1 : error("Invalid interval specification")
+offset(::Type{Interval{N, Diminished}}) where N = N in [2, 3, 6, 7] ? -2 : -1
+offset(::Type{Interval{N, Major}}) where N = N in [2, 3, 6, 7] ? 0 :  error("Invalid interval specification")
+offset(::Type{Interval{N, Perfect}}) where N = N in [1, 4, 5, 8] ? 0 :  error("Invalid interval specification")
+offset(::Type{Interval{N, Augmented}}) where N = 1
+
+@generated function semitones(interval::Type{Interval{N, Quality}}) where {N, Quality}
+    simple_n = (N - 1) % 7 + 1 # 1-based (1=unison, 8=octave)
+    octaves = (N - 1) ÷ 7
+    simple_semitones = base(Interval{simple_n, Quality}) + offset(Interval{simple_n, Quality})
+	 return :($simple_semitones + 12 * $octaves)
+end
+
+Base.:+(::Type{PC}, ::Type{Interval{N, Quality}}) where {PC <: PitchClass, N, Quality} =
+    move(PitchClassSpace, PC, semitones(Interval{N, Quality}))
+
+
+
+
+function Base.:+(::Type{PC}, ::Type{SpaceStep{S, N}}) where {PC <: PitchClass, S, N}
+	return move(S, PC, N)
+end
+
+function Base.:+(::Type{L}, ::Type{SpaceStep{S, N}}) where {L <: LetterName, S <: GenericSpace, N}
+	return move(S, L, N)
+end
+
+# todo: this is not correct
+@generated function Base.:+(::Type{PC}, ::Type{DiatonicStep{N}}) where {PC <: PitchClass, N}
+	current_letter = letter(PC)
+	current_acc = accidental(PC)
+	new_letter = move(LetterSpace, current_letter, N)
+	result = PitchClass(new_letter, current_acc)
+	:($result)
+end
+
+# is this better?
+@generated function Base.:+(::Type{PC}, ::Type{Interval{N, Quality}}) where {PC <: PitchClass, N, Quality}
+    target_letter = letter(PC) + GenericInterval{N-1}
+    target_semi = mod(semitone(PC) + semitones(Interval{N, Quality}), 12)
+    acc_offset = target_semi - chromatic_position(target_letter)
+    acc_offset > 2 && (acc_offset -= 12)
+    acc_offset < -2 && (acc_offset += 12)
+    return :(PitchClass($target_letter, Accidental($acc_offset)))
+end
+
+
+@generated function Base.:+(::Type{PC}, ::Type{SpaceStep{PitchClassSpace, N}}) where {PC <: PitchClass, N}
 	target_semi = mod(semitone(PC) + N, 12)
-	return spellings[target_semi + 1]
-end
-
-@generated function Base.:+(::Type{Pitch{PC, Register}}, ::Type{ChromaticStep{N}}) where {PC, Register, N}
-	# calculate new pitch class
-	new_pc = PC + ChromaticStep{N}
 	
-	# calculate register change
-	start_semi = semitone(PC)  # Could be > 11 for B#, etc
-	end_semi = semitone(new_pc)
-	total_change = start_semi + N
-	register_change = div(total_change, 12)
-	new_register = Register + register_change
-
-	return :(Pitch{$new_pc, $new_register})
-end
-
-@generated function Base.:+(::Type{PC}, ::Type{Interval{N, Q}}) where {PC <: PitchClass, N, Q}
-	start_letter = letter(PC)
-	# intervals are 1-indexed, so M3 = 3 letter names
-	target_letter = letter_step(start_letter, N - 1)
+	# Use line of fifths to find best spelling
+	# Key insight: any 7 consecutive positions in LineOfFifths form a proper diatonic collection
+	current_fifth_pos = number(LineOfFifths, PC)
 	
-	# calculate semitone distance
-	chromatic_step = ChromaticStep(Interval{N, Q})
-	semi_distance = chromatic_step.parameters[1]
+	# Find the diatonic collection containing our starting pitch
+	# This is the 7-note window in LineOfFifths centered near our position
+	window_start = current_fifth_pos - 3
+	window_end = current_fifth_pos + 3
 	
-	start_semi = mod(semitone(PC), 12)
-	target_semi = mod(start_semi + semi_distance, 12)
-	
-	# what accidental do we need on the target letter?
-	target_natural_semi = chromatic_position(target_letter)
-	offset = target_semi - target_natural_semi
-	
-	# normalize offset to -2..2 range
-	if offset > 2
-		offset -= 12
-	elseif offset < -2
-		offset += 12
+	# Generate candidates from this window and adjacent positions
+	candidates = Type[]
+	for fifth_pos in (window_start-1):(window_end+1)
+		candidate = PitchClass(LineOfFifths, fifth_pos)
+		if mod(semitone(candidate), 12) == target_semi
+			push!(candidates, candidate)
+		end
 	end
 	
-	acc = offset == -2 ? DoubleFlat :
-		  offset == -1 ? Flat :
-		  offset == 0 ? Natural :
-		  offset == 1 ? Sharp :
-		  offset == 2 ? DoubleSharp :
-		  error("Invalid accidental offset: $offset for interval $N$Q")
+	# Choose the candidate closest to our starting position in LineOfFifths
+	# This ensures smooth voice leading and proper spelling
+	best_candidate = candidates[1]
+	min_distance = abs(number(LineOfFifths, best_candidate) - current_fifth_pos)
 	
-	return :(PitchClass{$target_letter, $acc})
+	for candidate in candidates[2:end]
+		dist = abs(number(LineOfFifths, candidate) - current_fifth_pos)
+		if dist < min_distance
+			min_distance = dist
+			best_candidate = candidate
+		end
+	end
+	
+	:($best_candidate)
 end
 
-@generated function Base.:+(::Type{Pitch{PC, Register}}, ::Type{Interval{N, Q}}) where {PC, Register, N, Q}
-	# first get the new pitch class
-	new_pc = PC + Interval{N, Q}
-	
-	# calculate register change from letter progression
+# Interval addition using line of fifths for proper spelling
+@generated function Base.:+(::Type{PC}, ::Type{Interval{D, C, Q}}) where {PC <: PitchClass, D, C, Q}
+	# Move in letter space
 	start_letter = letter(PC)
-	letter_steps = N - 1
-	start_pos = letter_position(start_letter)
+	target_letter = move(LetterSpace, start_letter, D - 1)  # D is 1-indexed
 	
-	# every 7 letter steps = 1 octave
-	register_change = div(start_pos + letter_steps, 7)
-	new_register = Register + register_change
+	# Calculate required semitone position
+	target_semi = mod(semitone(PC) + C, 12)
 	
-	return :(Pitch{$new_pc, $new_register})
+	# Use line of fifths to determine proper accidental
+	# The 7-note diatonic collection containing PC should inform our spelling
+	start_fifth_pos = number(LineOfFifths, PC)
+	
+	# Find which accidental on target_letter gives us the right semitones
+	# while staying close in the line of fifths
+	candidates = []
+	for acc_offset in -2:2  # DoubleFlat to DoubleSharp
+		candidate = PitchClass(target_letter, Accidental(acc_offset))
+		if mod(semitone(candidate), 12) == target_semi
+			fifth_dist = abs(number(LineOfFifths, candidate) - start_fifth_pos)
+			push!(candidates, (candidate, fifth_dist))
+		end
+	end
+	
+	# Choose spelling with minimum fifth distance
+	best = sort(candidates, by = x -> x[2])[1][1]
+	:($best)
 end
 
-# Scale-aware movement (remains at pitch class level)
+# Multiple dispatch for register changes
+@generated function register_change(
+	::Type{SpaceStep{PitchClassSpace, N}}, 
+	::Type{Pitch{PC, Reg}}
+) where {PC, Reg, N}
+	# For chromatic movement, we need the actual result to check wrapping
+	new_pc = PC + SpaceStep{PitchClassSpace, N}
+	start_semi = mod(semitone(PC), 12)
+	end_semi = mod(semitone(new_pc), 12)
+	
+	# Did we cross an octave boundary?
+	if N > 0
+		# Moving up: did we wrap from 11 to 0?
+		wrapped = end_semi < start_semi ? 1 : 0
+	else
+		# Moving down: did we wrap from 0 to 11?
+		wrapped = end_semi > start_semi ? -1 : 0
+	end
+	
+	base_octaves = div(N, 12)
+	:($(base_octaves + wrapped))
+end
+
+@generated function register_change(
+	::Type{SpaceStep{LetterSpace, N}},
+	::Type{Pitch{PC, Reg}}
+) where {PC, Reg, N}
+	# Simple for letter space
+	:($(div(N, 7)))
+end
+
+@generated function register_change(
+	::Type{DiatonicStep{N}},
+	::Type{Pitch{PC, Reg}}
+) where {PC, Reg, N}
+	# Need to consider current position for wrapping
+	start_pos = letter_position(letter(PC))
+	end_pos = mod(start_pos + N, 7)
+	
+	# How many times did we wrap?
+	wraps = div(start_pos + N, 7)
+	:($(wraps))
+end
+
+# Interval register change
+@generated function register_change(
+	::Type{Interval{D, C, Q}},
+	::Type{Pitch{PC, Reg}}
+) where {PC, Reg, D, C, Q}
+	# Based on diatonic distance
+	start_pos = letter_position(letter(PC))
+	letter_steps = D - 1
+	wraps = div(start_pos + letter_steps, 7)
+	:($(wraps))
+end
+
+# Generic pitch space step
+@generated function Base.:+(
+	::Type{Pitch{PC, Reg}}, 
+	step::Type{<:Step}
+) where {PC, Reg}
+	new_pc = PC + step
+	reg_change = register_change(step, Pitch{PC, Reg})
+	new_reg = Reg + reg_change
+	:(Pitch{$new_pc, $new_reg})
+end
+
+# Special handling for interval addition to preserve octave calculation
+@generated function Base.:+(
+	::Type{Pitch{PC, Reg}}, 
+	::Type{Interval{D, C, Q}}
+) where {PC, Reg, D, C, Q}
+	new_pc = PC + Interval{D, C, Q}
+	reg_change = register_change(Interval{D, C, Q}, Pitch{PC, Reg})
+	new_reg = Reg + reg_change
+	:(Pitch{$new_pc, $new_reg})
+end
+
+# Scale-aware movement
 @generated function Base.:+(
 	::Type{PC}, 
 	::Type{GenericInterval{N}},
-	::Type{Scale{PCs}}
+	scale::Type{Scale{PCs}}
 ) where {PC <: PitchClass, N, PCs}
-	pos = findfirst(==(PC), PCs.parameters)
-	isnothing(pos) && error("Pitch class not in scale")
-	
-	# Move N steps in scale (0-indexed internally)
-	new_pos = mod(pos - 1 + N, length(PCs.parameters)) + 1
-	
-	return :($(PCs.parameters[new_pos]))
+	# Movement in scale space
+	scale_space = ScaleSpace{scale}
+	result = move(scale_space, PC, N)
+	:($result)
 end
 
-# Pitch movement in scale context
-@generated function Base.:+(
-	::Type{Pitch{PC, Register}},
-	::Type{GenericInterval{N}}, 
-	::Type{Scale{PCs}}
-) where {PC, Register, N, PCs}
-	# Get new pitch class
-	new_pc = PC + GenericInterval{N} in Scale{PCs}
-	
-	# Calculate register changes
-	pos = findfirst(==(PC), PCs.parameters)
-	new_pos = mod(pos - 1 + N, length(PCs.parameters)) + 1
-	
-	# Register changes when we wrap around the scale
-	register_change = div(pos - 1 + N, length(PCs.parameters))
-	
-	new_reg = Register + register_change
-	
-	return :(Pitch{$new_pc, $new_reg})
-end
+# Subtraction as inverse
+Base.:-(pc::Type{<:PitchClass}, step::Type{<:Step}) = pc + negate(step)
+Base.:-(p::Type{<:Pitch}, step::Type{<:Step}) = p + negate(step)
 
-@generated function Base.:+(::Type{Pitch{PC, Register}}, ::Type{DiatonicStep{N}}) where {PC, Register, N}
-	current_letter = letter(PC)
-	current_acc = accidental(PC)
-	new_letter = letter_step(current_letter, N)
-	current_pos = letter_position(current_letter)
-	register_change = div(current_pos + N, 7)
-	new_register = Register + register_change
-	new_pc = PitchClass{new_letter, current_acc}
-	return :(Pitch{$new_pc, $new_register})
-end
-
-@generated function negate(::Type{ChromaticStep{N}}) where N
-	return :(ChromaticStep($(-N)))
+@generated function negate(::Type{SpaceStep{S, N}}) where {S, N}
+	:(SpaceStep{$S, $(-N)})
 end
 
 @generated function negate(::Type{DiatonicStep{N}}) where N
-	return :(DiatonicStep($(-N)))
+	:(DiatonicStep{$(-N)})
+end
+
+@generated function negate(::Type{Interval{D, C, Q}}) where {D, C, Q}
+	# Negating an interval - both distances negate
+	# but we need to handle the 1-indexing properly
+	new_d = 2 - D  # If D=3 (third), negative is -1, which as 1-indexed is 1
+	:(Interval{$new_d, $(-C), $Q})
 end
 
 @generated function negate(::Type{GenericInterval{N}}) where N
-	return :(GenericInterval($(-N)))
+	:(GenericInterval{$(-N)})
 end
 
-Base.:-(p::Type{<:Pitch}, s::Type{<:SimpleStep}) = p + negate(s)
-Base.:-(pc::Type{<:PitchClass}, s::Type{<:SimpleStep}) = pc + negate(s)
-
-@generated function Base.:-(::Type{PC}, ::Type{Interval{N, Q}}) where {PC <: PitchClass, N, Q}
-	start_letter = letter(PC)
-	# go down N-1 letter names
-	target_letter = letter_step(start_letter, -(N - 1))
-	# calculate semitone distance (negative)
-	chromatic_step = ChromaticStep(Interval{N, Q})
-	semi_distance = -(chromatic_step.parameters[1])
-	
-	start_semi = mod(semitone(PC), 12)
-	target_semi = mod(start_semi + semi_distance, 12)  # mod handles negative
-	
-	target_natural_semi = chromatic_position(target_letter)
-	offset = target_semi - target_natural_semi
-	
-	if offset > 2
-		offset -= 12
-	elseif offset < -2
-		offset += 12
+# Find interval between pitch classes using line of fifths
+@generated function interval_between(::Type{PC1}, ::Type{PC2}) where {PC1 <: PitchClass, PC2 <: PitchClass}
+	# Letter distance
+	letter_dist = number(LetterSpace, letter(PC2)) - number(LetterSpace, letter(PC1))
+	if letter_dist < 0
+		letter_dist += 7
 	end
+	diatonic = letter_dist + 1  # Convert to 1-indexed
 	
-	acc = offset == -2 ? DoubleFlat :
-		offset == -1 ? Flat :
-		offset == 0 ? Natural :
-		offset == 1 ? Sharp :
-		offset == 2 ? DoubleSharp :
-		error("Invalid accidental offset: $offset")
+	# Chromatic distance
+	chromatic_dist = mod(semitone(PC2) - semitone(PC1), 12)
 	
-	return :(PitchClass{$target_letter, $acc})
+	# Determine quality from the distances
+	# This is where the interval table logic would go
+	# For now, simplified:
+	quality = Perfect  # Placeholder
+	gg
+	:(Interval{$diatonic, $chromatic_dist, $quality})
 end
 
-# For Pitch, also handle register changes
-@generated function Base.:-(::Type{Pitch{PC, Reg}}, ::Type{Interval{N, Q}}) where {PC, Reg, N, Q}
-	new_pc = PC - Interval{N, Q}
-	
-	# calculate register change
-	start_letter = letter(PC)
-	letter_steps = -(N - 1)  # Negative for going down
-	start_pos = letter_position(start_letter)
-	
-	# going down: negative letter steps can decrease register
-	register_change = div(start_pos + letter_steps, 7)
-	new_reg = Reg + register_change
 
-	return :(Pitch{$new_pc, $new_reg})
-end
 
