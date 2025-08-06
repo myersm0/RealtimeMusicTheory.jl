@@ -59,11 +59,11 @@ end
 is_enharmonic(::Type{PC1}, ::Type{PC2}) where {PC1 <: PitchClass, PC2 <: PitchClass} = 
 	mod(distance(LineOfFifths, PC1, PC2), 12) == 0
 
-find_enharmonics(::Type{PC}, n::Int) where {PC1 <: PitchClass} = 
+find_enharmonics(::Type{PC}, n::Int) where {PC <: PitchClass} = 
 	find_enharmonics(PC, D♮, n)
 
-# given a reference pitch class PC2, find the `n` enharmonic equivalents of `PC1`
-# that are closest in LineOfFifths space to PC2.
+# find the `n` enharmonic equivalents of `PC1` that are closest in LineOfFifths space 
+# to reference pitch `PC2`.
 function find_enharmonics(::Type{PC1}, ::Type{PC2}, n::Int) where {PC1 <: PitchClass, PC2 <: PitchClass}
 	start = number(LineOfFifths, PC1)
 	reference = number(LineOfFifths, PC2)
@@ -113,10 +113,11 @@ function Base.getindex(::Type{S}, ::Type{T1}, ::Type{T2}) where {S <: MusicalSpa
 	return (eltype(S)(S, i) for i in from:step:to)
 end
 
-# Make SpaceExpr a proper parametric type
+
+## allow expressions like `B♭ - 1` inside of indexing
+
 struct SpaceExpr{Op, Arg1, Arg2} end
 
-# Ensure arithmetic returns the right type structure
 Base.:+(::Type{PC}, n::Int) where {PC <: PitchClass} = SpaceExpr{:+, PC, Val{n}}
 Base.:-(::Type{PC}, n::Int) where {PC <: PitchClass} = SpaceExpr{:-, PC, Val{n}}
 

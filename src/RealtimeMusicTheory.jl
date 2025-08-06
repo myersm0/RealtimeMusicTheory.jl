@@ -40,4 +40,6 @@ include("arithmetic.jl")
 include("chords.jl")
 export Chord, triad, quality
 
+include("show.jl")
+
 end
