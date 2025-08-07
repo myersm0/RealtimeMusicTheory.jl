@@ -115,7 +115,7 @@ evaluate_in_space(::Type{S}, n::Int) where {S <: MusicalSpace} = n
 
 ## range-like call syntax for indexing into a space
 
-function (::Type{S})(start, len::Integer) where S <: MusicalSpace
+function (::Type{S})(start, len::Number) where S <: MusicalSpace
 	start_pos = evaluate_in_space(S, start)
 	return space_range(S, TopologyStyle(S), start_pos, 1, len)
 end
@@ -127,12 +127,12 @@ function (::Type{S})(start, stop) where S <: MusicalSpace
 	return space_range(S, TopologyStyle(S), start_pos, 1, len)
 end
 
-function (::Type{S})(start, step::Integer, len::Integer) where S <: MusicalSpace
+function (::Type{S})(start, step::Number, len::Number) where S <: MusicalSpace
 	start_pos = evaluate_in_space(S, start)
 	return space_range(S, TopologyStyle(S), start_pos, step, len)
 end
 
-function (::Type{S})(start, step::Integer, stop) where S <: MusicalSpace
+function (::Type{S})(start, step::Number, stop) where S <: MusicalSpace
 	start_pos = evaluate_in_space(S, start)
 	stop_pos = evaluate_in_space(S, stop)
 	len = calculate_length(S, TopologyStyle(S), start_pos, stop_pos, step)
