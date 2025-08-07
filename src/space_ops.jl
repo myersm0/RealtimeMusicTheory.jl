@@ -94,84 +94,80 @@ function move(::Type{MS}, ::Type{Linear}, ::Type{T}, steps::Integer) where {MS <
 end
 
 
-## indexing into a space
-
-function Base.getindex(::Type{S}, i::Int) where S <: MusicalSpace
-	return eltype(S)(S, i)
-end
-
-function Base.getindex(::Type{S}, ::Type{T}, length::Int) where {S <: MusicalSpace, T}
-	from = number(S, T)
-	to = from + length - 1
-	return (eltype(S)(S, i) for i in from:to)
-end
-
-function Base.getindex(::Type{S}, ::Type{T1}, ::Type{T2}) where {S <: MusicalSpace, T1, T2}
-	from = number(S, T1)
-	to = number(S, T2)
-	step = from < to ? 1 : -1
-	return (eltype(S)(S, i) for i in from:step:to)
-end
-
-
-## allow expressions like `B♭ - 1` inside of indexing
+## expression support for integer arithmetic on pitch classes (evaluated within indexing exprs)
+# todo: these need to work on letter names and pitches, too
 
 struct SpaceExpr{Op, Arg1, Arg2} end
 
 Base.:+(::Type{PC}, n::Int) where {PC <: PitchClass} = SpaceExpr{:+, PC, Val{n}}
 Base.:-(::Type{PC}, n::Int) where {PC <: PitchClass} = SpaceExpr{:-, PC, Val{n}}
 
+# todo: refactor this to use my Direction traits
 function evaluate_in_space(::Type{S}, ::Type{SpaceExpr{Op, PC, Val{N}}}) where {S <: MusicalSpace, Op, PC, N}
 	base_pos = number(S, PC)
 	return Op == :+ ? base_pos + N : base_pos - N
 end
 
 evaluate_in_space(::Type{S}, ::Type{PC}) where {S <: MusicalSpace, PC <: PitchClass} = number(S, PC)
+evaluate_in_space(::Type{S}, ::Type{L}) where {S <: MusicalSpace, L <: LetterName} = number(S, L)
 evaluate_in_space(::Type{S}, n::Int) where {S <: MusicalSpace} = n
 
-# three-argument getindex with required step
-function Base.getindex(::Type{S}, from_expr, step::Int, to_expr) where {S <: MusicalSpace}
-	from = evaluate_in_space(S, from_expr)
-	to = evaluate_in_space(S, to_expr)
+
+## range-like call syntax for indexing into a space
+
+function (::Type{S})(start, len::Integer) where S <: MusicalSpace
+	start_pos = evaluate_in_space(S, start)
+	return space_range(S, TopologyStyle(S), start_pos, 1, len)
+end
+
+function (::Type{S})(start, stop) where S <: MusicalSpace
+	start_pos = evaluate_in_space(S, start)
+	stop_pos = evaluate_in_space(S, stop)
+	len = calculate_length(S, TopologyStyle(S), start_pos, stop_pos, 1)
+	return space_range(S, TopologyStyle(S), start_pos, 1, len)
+end
+
+function (::Type{S})(start, step::Integer, len::Integer) where S <: MusicalSpace
+	start_pos = evaluate_in_space(S, start)
+	return space_range(S, TopologyStyle(S), start_pos, step, len)
+end
+
+function (::Type{S})(start, step::Integer, stop) where S <: MusicalSpace
+	start_pos = evaluate_in_space(S, start)
+	stop_pos = evaluate_in_space(S, stop)
+	len = calculate_length(S, TopologyStyle(S), start_pos, stop_pos, step)
+	return space_range(S, TopologyStyle(S), start_pos, step, len)
+end
+
+
+## helpers for the indexing fns above
+
+function calculate_length(::Type{S}, ::Type{Linear}, start::Int, stop::Int, step::Int) where S <: MusicalSpace
+	(step > 0 && stop < start) && return 0
+	(step < 0 && stop > start) && return 0
+	return div(stop - start, step) + 1
+end
+
+function calculate_length(::Type{S}, ::Type{Circular}, start::Int, stop::Int, step::Int) where S <: MusicalSpace
+	len = Base.length(S)
+	start = mod(start, len)
+	stop = mod(stop, len)
 	if step > 0
-		from <= to ? (eltype(S)(S, i) for i in from:step:to) : 
-		            (eltype(S)(S, i) for i in from:step:(to + length(S)))  # wrap around
+		# Forward direction - take shortest path
+		dist = start <= stop ? stop - start : (len - start) + stop
 	else
-		from >= to ? (eltype(S)(S, i) for i in from:step:to) :
-		            (eltype(S)(S, i) for i in from:step:(to - length(S)))  # wrap around
+		# Backward direction - take shortest path
+		dist = start >= stop ? start - stop : start + (len - stop)
 	end
+	return div(dist, abs(step)) + 1
 end
 
-# Two-part colon (default step 1)
-struct RangeSpec{From, To} end
-Base.:(:)(::Type{From}, ::Type{To}) where {From, To} = RangeSpec{From, To}
-
-# Three-part colon with explicit step
-struct StepRangeSpec{From, Step, To} end
-Base.:(:)(::Type{RangeSpec{From, To}}, step::Int) where {From, To} = StepRangeSpec{From, Val{step}, To}
-
-# Handle both in getindex
-function Base.getindex(::Type{S}, ::Type{RangeSpec{From, To}}) where {S <: MusicalSpace, From, To}
-    # Default step = 1
-    from = evaluate_in_space(S, From)
-    to = evaluate_in_space(S, To)
-    return (eltype(S)(S, i) for i in from:1:to)
+function space_range(::Type{S}, ::Type{Linear}, start::Int, step::Int, len::Int) where S <: MusicalSpace
+	return (eltype(S)(S, start + i * step) for i in 0:len-1)
 end
 
-function Base.getindex(::Type{S}, ::Type{StepRangeSpec{From, Val{Step}, To}}) where {S <: MusicalSpace, From, Step, To}
-    from = evaluate_in_space(S, From)
-    to = evaluate_in_space(S, To)
-    return (eltype(S)(S, i) for i in from:Step:to)
+function space_range(::Type{S}, ::Type{Circular}, start::Int, step::Int, len::Int) where S <: MusicalSpace
+	space_len = Base.length(S)
+	return (eltype(S)(S, mod(start + i * step, space_len)) for i in 0:len-1)
 end
-
-# allows e.g. `sort(collect(LineOfFifths[G♮-1:G♮+5]), by = PitchClassSpace)`
-(::Type{S})(x) where {S <: MusicalSpace} = number(S, x)
-(::Type{S})(x::Number) where {S <: MusicalSpace} = eltype(S)(S, x)
-
-
-
-
-
-
-
 
