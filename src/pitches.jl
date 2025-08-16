@@ -1,5 +1,7 @@
 
-abstract type LetterName end
+abstract type PitchRepresentation end
+
+abstract type LetterName <: PitchRepresentation end
 struct C <: LetterName end
 struct D <: LetterName end
 struct E <: LetterName end
@@ -24,8 +26,8 @@ const ♭ = Flat
 const 𝄪 = DoubleSharp
 const 𝄫 = DoubleFlat
 
-struct PitchClass{L <: LetterName, A <: Accidental} end
-struct Pitch{PC <: PitchClass, Register} end
+struct PitchClass{L <: LetterName, A <: Accidental} <: PitchRepresentation end
+struct Pitch{PC <: PitchClass, Register} <: PitchRepresentation end
 
 PitchClass(::Type{L}, ::Type{A}) where {L <: LetterName, A <: Accidental} = 
 	PitchClass{L, A}
@@ -79,6 +81,16 @@ const F𝄪 = PitchClass(F, DoubleSharp)
 const G𝄪 = PitchClass(G, DoubleSharp)
 const A𝄪 = PitchClass(A, DoubleSharp)
 const B𝄪 = PitchClass(B, DoubleSharp)
+
+function letter(::Type{PitchRepresentation}) end
+function accidental(::Type{PitchRepresentation}) end
+function register(::Type{PitchRepresentation}) end
+function pitch_class(::Type{PitchRepresentation}) end
+
+letter(::Type{L}) where L <: LetterName = L
+accidental(::Type{L}) where L <: LetterName = nothing
+register(::Type{L}) where L <: LetterName = nothing
+pitch_class(::Type{L}) where L <: LetterName = nothing
 
 letter(::Type{PitchClass{L, A}}) where {L, A} = L
 accidental(::Type{PitchClass{L, A}}) where {L, A} = A
