@@ -32,6 +32,9 @@ struct Pitch{PC <: PitchClass, Register} <: PitchRepresentation end
 PitchClass(::Type{L}, ::Type{A}) where {L <: LetterName, A <: Accidental} = 
 	PitchClass{L, A}
 
+PitchClass(::Type{L}, n::Int) where L <: LetterName = 
+	PitchClass{L, Accidental(n)}
+
 PitchClass(::Type{L}) where {L <: LetterName} = 
 	PitchClass{L, Natural}
 
