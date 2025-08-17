@@ -4,6 +4,20 @@ using Test
 
 import RealtimeMusicTheory: semitone, offset, number
 
+# todo: add iteration/enumeration of spaces so that we don't have to define this manually
+letters = [C, D, E, F, G, A, B]
+canonical_pitch_classes = [C♮, C♯, D♮, D♯, E♮, F♮, F♯, G♮, G♯, A♮, A♯, B♮]
+enharmonic_variants = [
+	C♭, C𝄫, C𝄪,
+	D♭, D𝄫, D𝄪,
+	E♭, E𝄫, E♯, E𝄪,
+	F♭, F𝄫, F𝄪,
+	G♭, G𝄫, G𝄪,
+	A♭, A𝄫, A𝄪,
+	B♭, B𝄫, B♯, B𝄪
+]
+registers = 1:6
+
 @testset "RealtimeMusicTheory.jl" begin
 
 	@testset "Pitches" begin
@@ -26,92 +40,64 @@ import RealtimeMusicTheory: semitone, offset, number
 			@test offset(DoubleFlat) == -2
 		end
 		
-		@testset "Semitone calculations" begin
-			@test semitone(C♮) == 0
-			@test semitone(D♮) == 2
-			@test semitone(E♮) == 4
-			@test semitone(F♮) == 5
-			@test semitone(G♮) == 7
-			@test semitone(A♮) == 9
-			@test semitone(B♮) == 11
-			
-			@test semitone(C♯) == 1
-			@test semitone(D♭) == 1
-			@test semitone(F♯) == 6
-			@test semitone(G♭) == 6
-			
-			# MIDI numbers
-			@test semitone(Pitch(C, 4)) == 60  # Middle C
-			@test semitone(Pitch(A, 4)) == 69  # A440
-			@test semitone(Pitch(C, -1)) == 0  # lowest MIDI note
-		end
-		
 		@testset "Generic pitch classes" begin
-			@test GenericPitchClass(C♯) == C♮
-			@test GenericPitchClass(D♭) == D♮
-			@test GenericPitchClass(F♯) == F♮
-			@test GPC(B♭) == B♮  # Test alias
+			for letter in letters
+				for acc in -3:3
+					@test GenericPitchClass(PitchClass(letter, acc)) == PitchClass(letter)
+				end
+			end
 		end
 	end
 
 	@testset "Spaces" begin
+		@test [number(pc) for pc in canonical_pitch_classes] == collect(0:length(LetterSpace) - 1)
+
+		@test number(Pitch(C, 4)) == 60  # middle C
+		@test number(Pitch(A, 4)) == 69  # A440
+		@test number(Pitch(C, -1)) == 0  # lowest MIDI note
+		
 		@testset "LetterSpace (Generic, Circular)" begin
-			# size and topology
-			@test Base.size(LetterSpace) == 7
-			@test Base.isfinite(LetterSpace) == true
-			@test TopologyStyle(LetterSpace) == Circular
-			
-			# number mappings
-			@test number(LetterSpace, C) == 0
-			@test number(LetterSpace, D) == 1
-			@test number(LetterSpace, B) == 6
-			
-			# works with pitch classes (extracts letter)
-			@test number(LetterSpace, C♯) == 0
-			@test number(LetterSpace, D♭) == 1
-			
-			# circular distances
-			@test distance(LetterSpace, C, D) == 1
-			@test distance(LetterSpace, C, B) == 1  # wraparound
-			@test distance(LetterSpace, C, F) == 3
-			@test distance(LetterSpace, F, C) == 3  # symmetric
-			
-			# directions
-			@test direction(LetterSpace, C, D) == Clockwise
-			@test direction(LetterSpace, C, B) == Counterclockwise
-			@test direction(LetterSpace, A, C) == Clockwise  # shorter path
+			test_nums = collect(0:length(LetterSpace) - 1)
+			@test [number(l) for l in letters] == test_nums
+			for acc in -2:2
+				@test [number(LetterSpace, PitchClass(l, acc)) for l in letters] == test_nums
+			end
+			@test [LetterName(LetterSpace, n) for n in test_nums] == letters
+
+			for i in 1:7
+				for j in 1:7
+					d = mod(j - i, 7)
+					d > 3 && (d -= 7)
+					@test distance(LetterSpace, letters[i], letters[j]) == abs(d)
+					@test distance(LetterSpace, letters[j], letters[i]) == abs(d)
+					@test direction(LetterSpace, letters[i], letters[j]) == (d < 0 ? Counterclockwise : Clockwise)
+					@test direction(LetterSpace, letters[j], letters[i]) == (d <= 0 ? Clockwise : Counterclockwise)
+				end
+			end
 		end
 		
 		@testset "GenericFifthsSpace" begin
-			@test number(GenericFifthsSpace, C) == 0
-			@test number(GenericFifthsSpace, G) == 1
-			@test number(GenericFifthsSpace, D) == 2
-			@test number(GenericFifthsSpace, F) == 6
-			
-			# C and D are adjacent in LetterSpace but not GenericFifthsSpace
-			@test distance(LetterSpace, C, D) == 1
-			@test distance(GenericFifthsSpace, C, D) == 2
-			
-			# C and G are adjacent in GenericFifthsSpace but not LetterSpace
-			@test distance(GenericFifthsSpace, C, G) == 1
-			@test distance(LetterSpace, C, G) == 3
+			test_nums = [0, 2, 4, 6, 1, 3, 5]
+			@test [number(GenericFifthsSpace, l) for l in letters] == test_nums
+			for acc in -2:2
+				@test [number(GenericFifthsSpace, PitchClass(l, acc)) for l in letters] == test_nums
+			end
+			@test [LetterName(GenericFifthsSpace, n) for n in test_nums] == letters
+			# todo: add tests of distance and direction
 		end
 		
 		@testset "GenericThirdsSpace" begin
-			# verify thirds cycle order
-			@test number(GenericThirdsSpace, C) == 0
-			@test number(GenericThirdsSpace, E) == 1
-			@test number(GenericThirdsSpace, G) == 2
-			
-			# C and E are adjacent in GenericThirdsSpace
-			@test distance(GenericThirdsSpace, C, E) == 1
-			@test distance(LetterSpace, C, E) == 2
-			@test distance(GenericFifthsSpace, C, E) == 3
+			test_nums = [0, 4, 1, 5, 2, 6, 3]
+			@test [number(GenericThirdsSpace, l) for l in letters] == test_nums
+			for acc in -2:2
+				@test [number(GenericThirdsSpace, PitchClass(l, acc)) for l in letters] == test_nums
+			end
+			@test [LetterName(GenericThirdsSpace, n) for n in test_nums] == letters
+			# todo: add tests of distance and direction
 		end
 		
 		@testset "Adjacent in exactly one space" begin
-			# Every pair of letters should be adjacent in exactly one generic space
-			letters = [C, D, E, F, G, A, B]
+			# every pair of letters should be adjacent in exactly one generic space
 			for i in 1:7, j in i+1:7
 				l1, l2 = letters[i], letters[j]
 				adjacencies = [
@@ -124,19 +110,9 @@ import RealtimeMusicTheory: semitone, offset, number
 		end
 		
 		@testset "PitchClassSpace (Chromatic)" begin
-			@test Base.size(PitchClassSpace) == 12
-			@test TopologyStyle(PitchClassSpace) == Circular
-			
-			# Chromatic numbering
-			@test number(PitchClassSpace, C♮) == 0
-			@test number(PitchClassSpace, C♯) == 1
-			@test number(PitchClassSpace, G♯) == 8
-			@test number(PitchClassSpace, B♮) == 11
-			
-			# Enharmonic equivalents (when implemented)
-			# @test number(PitchClassSpace, C♯) == number(PitchClassSpace, D♭)
-			
-			# circular distance
+			test_nums = 0:11
+			@test [number(PitchClassSpace, pc) for pc in canonical_pitch_classes] == test_nums
+			# todo: test variant spellings
 			@test distance(PitchClassSpace, C♮, B♮) == 1  # Wraparound
 			@test distance(PitchClassSpace, C♮, F♯) == 6  # Tritone
 		end
@@ -145,54 +121,73 @@ import RealtimeMusicTheory: semitone, offset, number
 			@test Base.isfinite(LineOfFifths) == false
 			@test TopologyStyle(LineOfFifths) == Linear
 			@test_throws ErrorException Base.size(LineOfFifths)
-			
-			# natural notes positions
-			@test number(LineOfFifths, F♮) == -3
-			@test number(LineOfFifths, C♮) == -2
-			@test number(LineOfFifths, G♮) == -1
-			@test number(LineOfFifths, D♮) == 0
-			
-			# sharps and flats
-			@test number(LineOfFifths, F♯) == 4   # F + 7
-			@test number(LineOfFifths, B♭) == -4  # B(3) - 7
-			@test number(LineOfFifths, C♯) == 5   # C(-2) + 7
-			
+			# adjacent elements should always be 5 semitones apart from each other
+			for i in -24:24
+				a = PitchClass(LineOfFifths, i - 1)
+				b = PitchClass(LineOfFifths, i)
+				c = PitchClass(LineOfFifths, i + 1)
+				@test distance(PitchClassSpace, a, b) == 5
+				@test distance(PitchClassSpace, b, a) == 5
+				@test distance(PitchClassSpace, b, c) == 5
+				@test distance(PitchClassSpace, c, b) == 5
+				@test direction(LineOfFifths, a, b) == Right
+				@test direction(LineOfFifths, b, a) == Left
+				@test direction(LineOfFifths, b, c) == Right
+				@test direction(LineOfFifths, c, b) == Left
+			end
 			# generic equivalence at distance 7
-			@test distance(LineOfFifths, C♮, C♯) == 7
-			@test distance(LineOfFifths, F♮, F♯) == 7
-			@test distance(LineOfFifths, B♮, B♭) == 7
-			
+			for i in -24:24
+				a = PitchClass(LineOfFifths, i - 7)
+				b = PitchClass(LineOfFifths, i)
+				c = PitchClass(LineOfFifths, i + 7)
+				@test GPC(a) == GPC(b) == GPC(c)
+			end
 			# enharmonic equivalence at distance 12
-			@test is_enharmonic(C♯, D♭) == true
-			@test is_enharmonic(F♯, G♭) == true
-			@test is_enharmonic(C♮, C♯) == false
-			
-			# direction on linear space
-			@test direction(LineOfFifths, C♮, G♮) == Right
-			@test direction(LineOfFifths, G♮, C♮) == Left
+			for i in -24:24
+				a = PitchClass(LineOfFifths, i - 12)
+				b = PitchClass(LineOfFifths, i)
+				c = PitchClass(LineOfFifths, i + 12)
+				@test is_enharmonic(a, b)
+				@test is_enharmonic(b, a)
+				@test is_enharmonic(b, c)
+				@test is_enharmonic(c, b)
+				@test is_enharmonic(a, c)
+				@test is_enharmonic(c, a)
+			end
 		end
 		
+		# todo: make this more comprehensive; e.g. modeled on the above
 		@testset "CircleOfFifths" begin
 			@test Base.size(CircleOfFifths) == 12
 			@test TopologyStyle(CircleOfFifths) == Circular
-			
-			# cerify fifths ordering
 			@test number(CircleOfFifths, C♮) == 0
 			@test number(CircleOfFifths, G♮) == 1
 			@test number(CircleOfFifths, F♮) == 11  # Wraps around
-			
-			# distance around the circle
 			@test distance(CircleOfFifths, C♮, G♮) == 1
 			@test distance(CircleOfFifths, C♮, F♮) == 1  # Other direction
 			@test distance(CircleOfFifths, C♮, F♯) == 6  # Opposite side
 		end
-		
-		@testset "Direction operators" begin
-			@test Clockwise * 3 == 3
-			@test Counterclockwise * 3 == -3
-			@test Left * 5 == -5
-			@test Right * 5 == 5
+
+		# todo: test indexing of other spaces in this way
+		@testset "MusicalSpace indexing" begin
+			# all the canonical pitches in CircleOfFifths order; 12 diff ways of specifying the same thing:
+			test_ranges = [
+				CircleOfFifths(0, 12) |> collect,
+				CircleOfFifths(C♮, 12) |> collect,
+				CircleOfFifths(G♮ - 1, 12) |> collect,
+				CircleOfFifths(F♮ + 1, 12) |> collect,
+				CircleOfFifths(C♮, F♮) |> collect,
+				CircleOfFifths(C♮, A♯ + 1) |> collect,
+				CircleOfFifths(C♮, C♮ - 1) |> collect,
+				CircleOfFifths(C♮, 13, 12) |> collect,
+				CircleOfFifths(F♮, -1, 12) |> collect |> reverse,
+				CircleOfFifths(F♮, -13, 12) |> collect |> reverse,
+				Iterators.take(CircleOfFifths(0, 24), 12) |> collect,
+				Iterators.drop(CircleOfFifths(0, 24), 12) |> collect,
+			]
+			@test allequal(test_ranges)
 		end
+
 	end
 
 	@testset "Interval arithmetic" begin
