@@ -175,7 +175,6 @@ PitchClass(::Type{PitchClassSpace}, ::Val{8}) = G♯
 PitchClass(::Type{PitchClassSpace}, ::Val{9}) = A♮
 PitchClass(::Type{PitchClassSpace}, ::Val{10}) = A♯
 PitchClass(::Type{PitchClassSpace}, ::Val{11}) = B♮
-number(::Type{PC}) where PC <: PitchClass = number(PitchClassSpace, PC) # default case where no space specified
 number(::Type{PitchClassSpace}, ::Type{C♮}) = 0
 number(::Type{PitchClassSpace}, ::Type{C♯}) = 1
 number(::Type{PitchClassSpace}, ::Type{D♮}) = 2
@@ -189,8 +188,31 @@ number(::Type{PitchClassSpace}, ::Type{A♮}) = 9
 number(::Type{PitchClassSpace}, ::Type{A♯}) = 10
 number(::Type{PitchClassSpace}, ::Type{B♮}) = 11
 
-# default number() function for convenience where no space is specified:
-number(::Type{L}) where L <: LetterName = number(LetterSpace, PC)
+# note: these will be MIDI numbers (rather than 0-centered at C4)
+struct DiscretePitchSpace <: DiscreteSpace end
+TopologyStyle(::Type{DiscretePitchSpace}) = Linear
+SpellingStyle(::Type{DiscretePitchSpace}) = SpecificSpelling
+RegisterStyle(::Type{DiscretePitchSpace}) = Registral
+Base.IteratorSize(::Type{<:DiscretePitchSpace}) = Base.IsInfinite()
+Base.isfinite(::Type{DiscretePitchSpace}) = false
+Pitch(n::Int) = Pitch(DiscretePitchSpace, Val(n))
+Pitch(::Type{DiscretePitchSpace}, n::Integer) = Pitch(DiscretePitchSpace, Val(n))
+function Pitch(::Type{DiscretePitchSpace}, ::Val{N}) where N
+	pc_num = N % 12
+	register = (N ÷ 12) - 1
+	return Pitch(PitchClass(PitchClassSpace, Val(pc_num)), register)
+end
+function number(::Type{DiscretePitchSpace}, ::Type{Pitch{PC, Reg}}) where {PC, Reg}
+	return 12 * (Reg + 1) + number(PitchClassSpace, PC)
+end
+
+# generic prototype
+function number(::Type{P}) where P <: PitchRepresentation end
+
+# default number() functions for convenience where no space is specified:
+number(::Type{L}) where L <: LetterName = number(LetterSpace, L)
+number(::Type{PC}) where PC <: PitchClass = number(PitchClassSpace, PC)
+number(::Type{P}) where P <: Pitch = number(DiscretePitchSpace, P)
 
 # if supplied PitchClass is not defined above, need to find an enharmonic equivalent
 # as follows and then dispatch to that instead:
