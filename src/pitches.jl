@@ -112,6 +112,7 @@ sharpen(::Type{PitchClass{L, A}}, n::Int = 1) where {L, A} = PitchClass(L, offse
 flatten(::Type{PitchClass{L, A}}, n::Int = 1) where {L, A} = PitchClass(L, offset(A) - n)
 modify(::Type{PitchClass{L, A}}, n::Int = 1) where {L, A} = PitchClass(L, offset(A) + n)
 
+Base.getindex(::Type{PC}, r::Integer) where PC <: PitchClass = Pitch(PC, r)
 
 
 
