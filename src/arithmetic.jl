@@ -1,4 +1,10 @@
 
+# Step types for explicit movement
+abstract type Step end
+struct ChromaticStep{N} <: Step end
+struct DiatonicStep{N} <: Step end
+
+
 ## helpers
 
 # base semitones for a major or perfect interval as appropriate
@@ -12,11 +18,12 @@ base(::Type{Interval{7, Quality}}) where Quality = 11
 base(::Type{Interval{8, Quality}}) where Quality = 12
 
 # how many semitones to shift from interval's base, as a function of quality
-offset(::Type{Interval{N, Minor}}) where N = N in [2, 3, 6, 7] ? -1 : error("Invalid interval specification")
-offset(::Type{Interval{N, Diminished}}) where N = N in [2, 3, 6, 7] ? -2 : -1
-offset(::Type{Interval{N, Major}}) where N = N in [2, 3, 6, 7] ? 0 :  error("Invalid interval specification")
-offset(::Type{Interval{N, Perfect}}) where N = N in [1, 4, 5, 8] ? 0 :  error("Invalid interval specification")
-offset(::Type{Interval{N, Augmented}}) where N = 1
+# (note: perfect intervals diminish by 1, others by 2)
+offset(::Type{Interval{N, Minor}}) where N      = -1
+offset(::Type{Interval{N, Major}}) where N      =  0
+offset(::Type{Interval{N, Perfect}}) where N    =  0
+offset(::Type{Interval{N, Augmented}}) where N  =  1
+offset(::Type{Interval{N, Diminished}}) where N = N in [1, 4, 5, 8] ? -1 : -2
 
 function semitones(interval::Type{Interval{N, Quality}}) where {N, Quality}
 	simple_n = (N - 1) % 7 + 1 # 1-based (1=unison, 8=octave)
@@ -28,28 +35,53 @@ end
 
 ## operator overloads for interval arithmetic
 
-function Base.:+(::Type{L}, ::Type{GenericInterval{N}}) where {L <: LetterName, N}
-	return move(LetterSpace, L, N)
+# generic
+function Base.:+(::Type{PitchRepresentation}, ::Type{AbstractInterval}) end
+function Base.:-(::Type{PitchRepresentation}, ::Type{AbstractInterval}) 
+	return error("Subtraction of intervals is not defined")
 end
 
-# todo: should this return a PC? maybe this op does not really make sense; reconsider
-function Base.:+(::Type{PC}, ::Type{GenericInterval{N}}) where {PC <: PitchClass, N}
-	return move(LetterSpace, letter(PC), N)
-end
+# Letter + GenericInterval
+Base.:+(::Type{L}, ::Type{GenericInterval{N}}) where {L <: LetterName, N} = 
+	move(LetterSpace, L, N - 1)
 
-# todo: should it be move's responsibility to spell correctly?
+# PitchClass + GenericInterval
+Base.:+(::Type{PC}, ::Type{GenericInterval{N}}) where {PC <: PitchClass, N} = 
+	PitchClass(letter(PC) + GenericInterval{N}, accidental(PC))
 
-# for intervals 2, 3, 6, 7 (i.e. where major and minor qualities exist), 
-# minor denotes -1, diminished -2, and augmented +1, relative to major;
-# for intervals 1, 4, 5, 8 (i.e. ones where perfect quality exists),
-# diminished denotes - 1, augmenting denotes + 1
-# (note that MusicTheory.jl is incorrect re: diminished seconds)
-
+# PitchClass + Interval
 function Base.:+(::Type{PC}, ::Type{Interval{N, Quality}}) where {PC <: PitchClass, N, Quality}
-	return move(PitchClassSpace, PC, semitones(Interval{N, Quality}))
+	simple_target = PitchClass(LineOfFifths, number(LineOfFifths, PC) - 1 + mod(2N - 1, 7))
+	modified_target = modify(simple_target, offset(Interval{N, Quality}))
+	return modified_target
 end
 
 
+# Pitch + ChromaticStep
+@generated function Base.:+(::Type{Pitch{PC, Reg}}, ::Type{ChromaticStep{N}}) where {PC, Reg, N}
+	new_pc = PC + ChromaticStep{N}
+	
+	# Calculate register change
+	old_semi = number(PitchClassSpace, PC)
+	new_semi = number(PitchClassSpace, new_pc)
+	
+	# Register changes when we cross C (semitone 0)
+	crossed = N > 0 ? (new_semi < old_semi) : (new_semi > old_semi)
+	new_register = Reg + (crossed ? (N > 0 ? 1 : -1) : 0)
+	
+	return :(Pitch($new_pc, $new_register))
+end
 
-
+# Pitch + Interval
+function Base.:+(::Type{Pitch{PC, Reg}}, ::Type{Interval{N, Quality}}) where {PC, Reg, N, Quality}
+	new_pc = PC + Interval{N, Quality}
+	octaves = (N - 1) ÷ 7
+	# check if we've wrapped in letter space
+	old_letter_num = number(LetterSpace, letter(PC))
+	new_letter_num = number(LetterSpace, letter(new_pc))
+	steps_within = mod(N - 1, 7)
+	wrapped = steps_within > 0 && new_letter_num < old_letter_num
+	new_register = Reg + octaves + (wrapped ? 1 : 0)
+	return Pitch(new_pc, new_register)
+end
 

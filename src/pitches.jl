@@ -108,3 +108,10 @@ pitch_class(::Type{Pitch{PC, Register}}) where {PC, Register} = PC
 GenericPitchClass(::Type{PC}) where PC <: PitchClass = PitchClass(letter(PC))
 const GPC = GenericPitchClass
 
+sharpen(::Type{PitchClass{L, A}}, n::Int = 1) where {L, A} = PitchClass(L, offset(A) + n)
+flatten(::Type{PitchClass{L, A}}, n::Int = 1) where {L, A} = PitchClass(L, offset(A) - n)
+modify(::Type{PitchClass{L, A}}, n::Int = 1) where {L, A} = PitchClass(L, offset(A) + n)
+
+
+
+

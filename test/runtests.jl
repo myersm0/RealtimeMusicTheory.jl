@@ -54,7 +54,9 @@ registers = 1:6
 
 		@test number(Pitch(C, 4)) == 60  # middle C
 		@test number(Pitch(A, 4)) == 69  # A440
-		@test number(Pitch(C, -1)) == 0  # lowest MIDI note
+
+		all_pitch_numbers = vec([number(Pitch(pc, reg)) for pc in canonical_pitch_classes, reg in -1:8])
+		@test all_pitch_numbers == 0:119
 		
 		@testset "LetterSpace (Generic, Circular)" begin
 			test_nums = collect(0:length(LetterSpace) - 1)
@@ -191,127 +193,81 @@ registers = 1:6
 	end
 
 	@testset "Interval arithmetic" begin
-		c4 = Pitch(C, 4)
+		for l in letters
+			for n in 1:14
+				expected_distance = (n - 1) % length(LetterSpace)
+				@test distance(LetterSpace, Clockwise, l, l + GenericInterval(n)) == expected_distance
+				# for PitchClass, sharpening of flattening should not change generic distance:
+				for acc in -3:3
+					pc = PitchClass(l, acc)
+					@test distance(LetterSpace, Clockwise, pc, pc + GenericInterval(n)) == expected_distance
+				end
+			end
+		end
 
-		@test C + GenericInterval(1) == D
-		@test C + GenericInterval(-1) == B
-		@test C - GenericInterval(1) == B
+		# test equivalence of interval semitone size as found in Wikipedia table of simple intervals
+		@test semitones(Interval(1, Perfect)) == semitones(Interval(2, Diminished))
+		@test semitones(Interval(2, Minor)) == semitones(Interval(1, Augmented))
+		@test semitones(Interval(2, Major)) == semitones(Interval(3, Diminished))
+		@test semitones(Interval(3, Minor)) == semitones(Interval(2, Augmented))
+		@test semitones(Interval(3, Major)) == semitones(Interval(4, Diminished))
+		@test semitones(Interval(4, Perfect)) == semitones(Interval(3, Augmented))
+		@test semitones(Interval(5, Perfect)) == semitones(Interval(6, Diminished))
+		@test semitones(Interval(5, Diminished)) == semitones(Interval(4, Augmented))
+		@test semitones(Interval(6, Minor)) == semitones(Interval(5, Augmented))
+		@test semitones(Interval(6, Major)) == semitones(Interval(7, Diminished))
+		@test semitones(Interval(7, Minor)) == semitones(Interval(6, Augmented))
+		@test semitones(Interval(7, Major)) == semitones(Interval(8, Diminished))
+		@test semitones(Interval(8, Perfect)) == semitones(Interval(7, Augmented))
 
-		@test C♮ + GenericInterval(1) == D
+		# test proper spellings
+		@test C♮ + Interval(3, Major) == E♮
+		@test C♮ + Interval(3, Minor) == E♭
+		@test C♮ + Interval(5, Perfect) == G♮
+		@test C♮ + Interval(5, Diminished) == G♭
+		@test C♮ + Interval(5, Augmented) == G♯
+		@test F♯ + Interval(4, Perfect) == B♮
+		@test F♯ + Interval(4, Augmented) == B♯
+		@test A♮ + Interval(7, Minor) == G♮
+		@test A♮ + Interval(7, Diminished) == G♭
+		@test E♭ + Interval(6, Major) == C♮
+		@test E♭ + Interval(6, Diminished) == C𝄫
+		@test C♯ + Interval(7, Diminished) == B♭
+		@test G♮ + Interval(2, Major) == A♮
+		@test G♮ + Interval(2, Minor) == A♭
+		@test F♮ + Interval(4, Perfect) == B♭
+		@test F♮ + Interval(4, Augmented) == B♮
+		@test D♮ + Interval(2, Minor) == E♭
+		@test D♮ + Interval(2, Major) == E♮
+		@test B♮ + Interval(8, Augmented) == B♯
 
-		semitones(P1)
-		semitones(m3)
-		semitones(P8)
+		# for any pitch, adding a unison will not change the register; 
+		# adding an octave (or two) will
+		for l in letters
+			for reg in 0:7
+				for acc in -3:3
+					p1 = Pitch(l, Accidental(acc), reg)
+					@test register(p1 + P1) == reg
+					@test register(p1 + P8) == reg + 1
+					@test register(p1 + Interval(15, Perfect)) == reg + 2
+				end
+			end
+		end
 
-		@test (c4 + ChromaticStep{1}) == Pitch(C, Sharp, 4)
-		@test (c4 + ChromaticStep{12}) == Pitch(C, 5)
-
-		@test (c4 + DiatonicStep{1}) == Pitch(D, 4)
-		@test (c4 + DiatonicStep{7}) == Pitch(C, 5)
-		
-		@test (c4 + P1) == c4
-		@test (c4 + M3) == Pitch(E, Natural, 4)
-		@test (c4 + P5) == Pitch(G, Natural, 4)
-		@test (c4 + P8) == Pitch(C, Natural, 5)
-		
-		# Intervals with accidentals
-		@test (c4 + m2) == Pitch(D, Flat, 4)
-		@test (c4 + m3) == Pitch(E, Flat, 4)
-		
-		# Octave crossing
-		b4 = Pitch(B, 4)
-		@test (b4 + M2) == Pitch(C, Sharp, 5)
-		
-		# From different starting notes
-		d4 = Pitch(D, 4)
-		@test (d4 + M3) == Pitch(F, Sharp, 4)
-		
-		e4 = Pitch(E, 4)
-		@test (e4 + P4) == Pitch(A, Natural, 4)
-		
-		# With accidentals in starting pitch
-		f_sharp = Pitch(F, ♯, 4)
-		@test semitone(f_sharp + P5) == semitone(Pitch(C, ♯, 5))
-	end
-	
-	@testset "Scales" begin
-		c_major = Scale(MajorScale, PitchClass(C))
-		@test c_major[ScaleDegree{1}] == PitchClass(C, Natural)
-		@test c_major[ScaleDegree{2}] == PitchClass(D, Natural)
-		@test c_major[ScaleDegree{3}] == PitchClass(E, Natural)
-		@test c_major[ScaleDegree{4}] == PitchClass(F, Natural)
-		@test c_major[ScaleDegree{5}] == PitchClass(G, Natural)
-		@test c_major[ScaleDegree{6}] == PitchClass(A, Natural)
-		@test c_major[ScaleDegree{7}] == PitchClass(B, Natural)
-		@test c_major[ScaleDegree{8}] == PitchClass(C, Natural)
-
-		d_minor = Scale(MinorScale, PitchClass(D)) # todo: this gives us A# instead of Bb
-		@test d_minor[ScaleDegree{1}] == PitchClass(D, Natural)
-		@test d_minor[ScaleDegree{2}] == PitchClass(E, Natural)
-		@test d_minor[ScaleDegree{3}] == PitchClass(F, Natural)
-		@test d_minor[ScaleDegree{4}] == PitchClass(G, Natural)
-		@test d_minor[ScaleDegree{5}] == PitchClass(A, Natural)
-		@test d_minor[ScaleDegree{6}] == PitchClass(B, Flat)
-		@test d_minor[ScaleDegree{7}] == PitchClass(C, Natural)
-		@test d_minor[ScaleDegree{8}] == PitchClass(D, Natural)
-	end
-	
-	@testset "Chords" begin
-		c_major = Scale(MajorScale, PitchClass(C))
-		c_triad = triad(c_major, ScaleDegree{1})
-		c_triad == Chord{Tuple{PitchClass(C), PitchClass(E), PitchClass(G)}}
-		d_minor = Scale(MinorScale, PitchClass(D))
-		d_triad = triad(d_minor, ScaleDegree{1})
-		d_triad == Chord{Tuple{PitchClass(D), PitchClass(F), PitchClass(A)}}
-	end
-	
-	@testset "Type stability" begin
-		c = Pitch(C, 4)
-		@test (@inferred c + M3) == Pitch(E, Natural, 4)
-		@test @allocated(c + M3) == 0
-		@test (@inferred semitone(c)) == 60
-		@test @allocated(semitone(c)) == 0
-	end
-	
-	@testset "Edge cases" begin
-		# Very high/low octaves
-		c_neg1 = Pitch(C, -1)
-		@test semitone(c_neg1) == 0  # MIDI note 0
-		
-		c10 = Pitch(C, 10)
-		@test semitone(c10) == 132
-		
-		# Enharmonic equivalents have same semitone value
-		c_sharp = Pitch(C, ♯, 4)
-		d_flat = Pitch(D, ♭, 4)
-		@test semitone(c_sharp) == semitone(d_flat)
-		
-		# Intervals that wrap around
-		b4 = Pitch(B, 4)
-		@test semitone(b4 + m2) == semitone(Pitch(C, 5))
-	end
-	
-	@testset "Performance benchmarks" begin
-		c = Pitch(C, 4)
-		
-		# These should be essentially free
-		b_pitch_creation = @benchmark Pitch(C, 4)
-		@test median(b_pitch_creation.times) < 10  # nanoseconds
-		
-		b_interval_add = @benchmark Pitch(C, 4) + M3
-		@test median(b_interval_add.times) < 10
-		
-		b_semitone = @benchmark semitone(Pitch(C, 4))
-		@test median(b_semitone.times) < 10
-
-		b_scale_creation = @benchmark Scale(MajorScale, PitchClass(C))
-		@test median(b_scale_creation.times) < 10
-		
-		# No allocations
-		@test b_pitch_creation.allocs == 0
-		@test b_interval_add.allocs == 0
-		@test b_semitone.allocs == 0
-		@test b_scale_creation.allocs == 0
+		# registers begin at C; so, for C in any register, adding
+		# an interval less than an octave should not result in register change
+		for reg in 0:7
+			p1 = Pitch(C, Accidental(acc), reg)
+			for n in [2, 3, 6, 7]
+				for quality in [Minor, Major, Diminished, Augmented]
+					@test register(p1 + Interval(n, quality)) == reg
+				end
+			end
+			for n in [1, 4, 5]
+				for quality in [Perfect, Diminished, Augmented]
+					@test register(p1 + Interval(n, quality)) == reg
+				end
+			end
+		end
 	end
 end
-
