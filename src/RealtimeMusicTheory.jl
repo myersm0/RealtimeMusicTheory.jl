@@ -19,27 +19,7 @@ export distance, direction
 export LetterSpace, GenericFifthsSpace, GenericThirdsSpace, PitchClassSpace, LineOfFifths, CircleOfFifths
 export is_enharmonic
 
-include("steps.jl")
-export PitchSpace, DiatonicSpace, ChromaticSpace
-export Step, DiatonicStep, ChromaticStep, GenericInterval, Semitone, WholeTone
-export Interval, IntervalQuality, Perfect, Major, Minor, Augmented, Diminished
-export P1, m2, M2, m3, M3, P4, A4, d5, P5, m6, M6, m7, M7, P8
-
-include("musical_structures.jl")
-
-include("scales.jl")
-export AbstractScale, DiatonicScale, ChromaticScale
-export MajorScale, MinorScale, NaturalMinorScale, MelodicMinorScale, HarmonicMinorScale
-export Scale, ScaleDegree, ScaleFunction
-export Tonic, Supertonic, Mediant, Subdominant, Dominant, Submediant, LeadingTone, SubTonic
-export tonic, supertonic, mediant, subdominant, dominant, submediant, leadingtone, subtonic
-export realize
-
+include("intervals.jl")
 include("arithmetic.jl")
-
-include("chords.jl")
-export Chord, triad, quality
-
-include("show.jl")
 
 end

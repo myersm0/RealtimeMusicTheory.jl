@@ -193,6 +193,16 @@ registers = 1:6
 	@testset "Interval arithmetic" begin
 		c4 = Pitch(C, 4)
 
+		@test C + GenericInterval(1) == D
+		@test C + GenericInterval(-1) == B
+		@test C - GenericInterval(1) == B
+
+		@test C♮ + GenericInterval(1) == D
+
+		semitones(P1)
+		semitones(m3)
+		semitones(P8)
+
 		@test (c4 + ChromaticStep{1}) == Pitch(C, Sharp, 4)
 		@test (c4 + ChromaticStep{12}) == Pitch(C, 5)
 
