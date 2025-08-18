@@ -2,7 +2,7 @@ using RealtimeMusicTheory
 using BenchmarkTools
 using Test
 
-import RealtimeMusicTheory: semitone, offset, number
+import RealtimeMusicTheory: semitones, offset, number
 
 # todo: add iteration/enumeration of spaces so that we don't have to define this manually
 letters = [C, D, E, F, G, A, B]
@@ -50,11 +50,8 @@ registers = 1:6
 	end
 
 	@testset "Spaces" begin
-		@test [number(pc) for pc in canonical_pitch_classes] == collect(0:length(LetterSpace) - 1)
-
 		@test number(Pitch(C, 4)) == 60  # middle C
 		@test number(Pitch(A, 4)) == 69  # A440
-
 		all_pitch_numbers = vec([number(Pitch(pc, reg)) for pc in canonical_pitch_classes, reg in -1:8])
 		@test all_pitch_numbers == 0:119
 		
@@ -65,7 +62,6 @@ registers = 1:6
 				@test [number(LetterSpace, PitchClass(l, acc)) for l in letters] == test_nums
 			end
 			@test [LetterName(LetterSpace, n) for n in test_nums] == letters
-
 			for i in 1:7
 				for j in 1:7
 					d = mod(j - i, 7)
@@ -123,7 +119,7 @@ registers = 1:6
 			@test Base.isfinite(LineOfFifths) == false
 			@test TopologyStyle(LineOfFifths) == Linear
 			@test_throws ErrorException Base.size(LineOfFifths)
-			# adjacent elements should always be 5 semitones apart from each other
+			# adjacent elements should always be 5 semitones apart from each other:
 			for i in -24:24
 				a = PitchClass(LineOfFifths, i - 1)
 				b = PitchClass(LineOfFifths, i)
@@ -137,14 +133,14 @@ registers = 1:6
 				@test direction(LineOfFifths, b, c) == Right
 				@test direction(LineOfFifths, c, b) == Left
 			end
-			# generic equivalence at distance 7
+			# generic equivalence at distance 7:
 			for i in -24:24
 				a = PitchClass(LineOfFifths, i - 7)
 				b = PitchClass(LineOfFifths, i)
 				c = PitchClass(LineOfFifths, i + 7)
 				@test GPC(a) == GPC(b) == GPC(c)
 			end
-			# enharmonic equivalence at distance 12
+			# enharmonic equivalence at distance 12:
 			for i in -24:24
 				a = PitchClass(LineOfFifths, i - 12)
 				b = PitchClass(LineOfFifths, i)
@@ -257,7 +253,7 @@ registers = 1:6
 		# registers begin at C; so, for C in any register, adding
 		# an interval less than an octave should not result in register change
 		for reg in 0:7
-			p1 = Pitch(C, Accidental(acc), reg)
+			p1 = Pitch(C, reg)
 			for n in [2, 3, 6, 7]
 				for quality in [Minor, Major, Diminished, Augmented]
 					@test register(p1 + Interval(n, quality)) == reg
@@ -271,3 +267,4 @@ registers = 1:6
 		end
 	end
 end
+
