@@ -19,10 +19,10 @@ offset(::Type{Interval{N, Perfect}}) where N = N in [1, 4, 5, 8] ? 0 :  error("I
 offset(::Type{Interval{N, Augmented}}) where N = 1
 
 function semitones(interval::Type{Interval{N, Quality}}) where {N, Quality}
-    simple_n = (N - 1) % 7 + 1 # 1-based (1=unison, 8=octave)
-    octaves = (N - 1) ÷ 7
-    simple_semitones = base(Interval{simple_n, Quality}) + offset(Interval{simple_n, Quality})
-	 return simple_semitones + 12 * octaves
+	simple_n = (N - 1) % 7 + 1 # 1-based (1=unison, 8=octave)
+	octaves = (N - 1) ÷ 7
+	simple_semitones = base(Interval{simple_n, Quality}) + offset(Interval{simple_n, Quality})
+	return simple_semitones + 12 * octaves
 end
 
 
@@ -46,7 +46,7 @@ end
 # (note that MusicTheory.jl is incorrect re: diminished seconds)
 
 function Base.:+(::Type{PC}, ::Type{Interval{N, Quality}}) where {PC <: PitchClass, N, Quality}
-    return move(PitchClassSpace, PC, semitones(Interval{N, Quality}))
+	return move(PitchClassSpace, PC, semitones(Interval{N, Quality}))
 end
 
 
