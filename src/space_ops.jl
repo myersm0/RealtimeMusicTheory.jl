@@ -4,26 +4,45 @@
 # user-facing distance function; will dispatch appropriate specific function based on traits
 function distance(
 		::Type{MS}, ::Type{T1}, ::Type{T2}
-	) where {MS <: MusicalSpace, T1 <: Union{LetterName, PitchClass}, T2 <: Union{LetterName, PitchClass}}
+		) where {MS <: MusicalSpace, T1 <: PitchRepresentation, T2 <: PitchRepresentation}
 	return distance(MS, TopologyStyle(MS), T1, T2)
+end
+
+# user-facing distance function; will dispatch appropriate specific function based on traits
+function distance(
+		::Type{MS}, ::Type{D}, ::Type{T1}, ::Type{T2}
+		) where {MS <: MusicalSpace, D <: CircularDirection, T1 <: PitchRepresentation, T2 <: PitchRepresentation}
+	TopologyStyle(MS) == Circular || error("Directional movement only allowed for Circular spaces.")
+	return distance(MS, Circular, D, T1, T2)
 end
 
 # distance on the number line for linear spaces
 function distance(
 		::Type{MS}, ::Type{Linear}, ::Type{T1}, ::Type{T2}
-	) where {MS <: MusicalSpace, T1 <: Union{LetterName, PitchClass}, T2 <: Union{LetterName, PitchClass}}
+	) where {MS <: MusicalSpace, T1 <: PitchRepresentation, T2 <: PitchRepresentation}
 	return abs(number(MS, T2) - number(MS, T1))
 end
 
 # distance on a circular topology (the lesser of clockwise, counterclockwise distance)
 function distance(
 		::Type{MS}, ::Type{Circular}, ::Type{T1}, ::Type{T2}
-	) where {MS <: MusicalSpace, T1 <: Union{LetterName, PitchClass}, T2 <: Union{LetterName, PitchClass}}
-	clockwise_dist = mod(number(MS, T2) - number(MS, T1), length(MS))
-	counterclockwise_dist = size(MS) - clockwise_dist
+	) where {MS <: MusicalSpace, T1 <: PitchRepresentation, T2 <: PitchRepresentation}
+	clockwise_dist = distance(MS, Clockwise, T1, T2)
+	counterclockwise_dist = distance(MS, Counterclockwise, T1, T2)
 	return min(clockwise_dist, counterclockwise_dist)
 end
 
+function distance(
+		::Type{MS}, ::Type{Circular}, ::Type{Clockwise}, ::Type{T1}, ::Type{T2}
+	) where {MS <: MusicalSpace, T1 <: PitchRepresentation, T2 <: PitchRepresentation}
+	return mod(number(MS, T2) - number(MS, T1), length(MS))
+end
+
+function distance(
+		::Type{MS}, ::Type{Circular}, ::Type{Counterclockwise}, ::Type{T1}, ::Type{T2}
+	) where {MS <: MusicalSpace, T1 <: PitchRepresentation, T2 <: PitchRepresentation}
+	return size(MS) - distance(MS, Clockwise, T1, T2)
+end
 
 ## direction
 
