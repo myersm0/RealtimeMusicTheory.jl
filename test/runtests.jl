@@ -238,26 +238,27 @@ registers = 1:6
 		@test B♮ + Interval(8, Augmented) == B♯
 
 		# test inference of intervals between two pitches
-		@test Interval(Pitch(C♮, 4), Pitch(E♮, 4)) == Interval(3, Major)
-		@test Interval(Pitch(C♮, 4), Pitch(E♭, 4)) == Interval(3, Minor)
-		@test Interval(Pitch(C♮, 4), Pitch(G♮, 4)) == Interval(5, Perfect)
-		@test Interval(Pitch(C♮, 4), Pitch(G♭, 4)) == Interval(5, Diminished)
-		@test Interval(Pitch(C♮, 4), Pitch(G♯, 4)) == Interval(5, Augmented)
-		@test Interval(Pitch(F♯, 4), Pitch(B♮, 4)) == Interval(4, Perfect)
-		@test Interval(Pitch(F♯, 4), Pitch(B♯, 4)) == Interval(4, Augmented)
-		@test Interval(Pitch(A♮, 4), Pitch(G♮, 5)) == Interval(7, Minor)
-		@test Interval(Pitch(A♮, 4), Pitch(G♭, 5)) == Interval(7, Diminished)
-		@test Interval(Pitch(E♭, 4), Pitch(C♮, 5)) == Interval(6, Major)
-		@test Interval(Pitch(E♭, 4), Pitch(C𝄫, 5)) == Interval(6, Diminished)
-		@test Interval(Pitch(C♯, 4), Pitch(B♭, 4)) == Interval(7, Diminished)
-		@test Interval(Pitch(G♮, 4), Pitch(A♮, 4)) == Interval(2, Major)
-		@test Interval(Pitch(G♮, 4), Pitch(A♭, 4)) == Interval(2, Minor)
-		@test Interval(Pitch(F♮, 4), Pitch(B♭, 4)) == Interval(4, Perfect)
-		@test Interval(Pitch(F♮, 4), Pitch(B♮, 4)) == Interval(4, Augmented)
-		@test Interval(Pitch(D♮, 4), Pitch(E♭, 4)) == Interval(2, Minor)
-		@test Interval(Pitch(D♮, 4), Pitch(E♮, 4)) == Interval(2, Major)
-		@test Interval(Pitch(B♮, 4), Pitch(B♯, 5)) == Interval(8, Augmented)
-
+		for r in 0:3
+			@test Interval(Pitch(C♮, 4), Pitch(E♮, 4 + r)) == Interval(3 + 7r, Major)
+			@test Interval(Pitch(C♮, 4), Pitch(E♭, 4 + r)) == Interval(3 + 7r, Minor)
+			@test Interval(Pitch(C♮, 4), Pitch(G♮, 4 + r)) == Interval(5 + 7r, Perfect)
+			@test Interval(Pitch(C♮, 4), Pitch(G♭, 4 + r)) == Interval(5 + 7r, Diminished)
+			@test Interval(Pitch(C♮, 4), Pitch(G♯, 4 + r)) == Interval(5 + 7r, Augmented)
+			@test Interval(Pitch(F♯, 4), Pitch(B♮, 4 + r)) == Interval(4 + 7r, Perfect)
+			@test Interval(Pitch(F♯, 4), Pitch(B♯, 4 + r)) == Interval(4 + 7r, Augmented)
+			@test Interval(Pitch(A♮, 4), Pitch(G♮, 5 + r)) == Interval(7 + 7r, Minor)
+			@test Interval(Pitch(A♮, 4), Pitch(G♭, 5 + r)) == Interval(7 + 7r, Diminished)
+			@test Interval(Pitch(E♭, 4), Pitch(C♮, 5 + r)) == Interval(6 + 7r, Major)
+			@test Interval(Pitch(E♭, 4), Pitch(C𝄫, 5 + r)) == Interval(6 + 7r, Diminished)
+			@test Interval(Pitch(C♯, 4), Pitch(B♭, 4 + r)) == Interval(7 + 7r, Diminished)
+			@test Interval(Pitch(G♮, 4), Pitch(A♮, 4 + r)) == Interval(2 + 7r, Major)
+			@test Interval(Pitch(G♮, 4), Pitch(A♭, 4 + r)) == Interval(2 + 7r, Minor)
+			@test Interval(Pitch(F♮, 4), Pitch(B♭, 4 + r)) == Interval(4 + 7r, Perfect)
+			@test Interval(Pitch(F♮, 4), Pitch(B♮, 4 + r)) == Interval(4 + 7r, Augmented)
+			@test Interval(Pitch(D♮, 4), Pitch(E♭, 4 + r)) == Interval(2 + 7r, Minor)
+			@test Interval(Pitch(D♮, 4), Pitch(E♮, 4 + r)) == Interval(2 + 7r, Major)
+			@test Interval(Pitch(B♮, 4), Pitch(B♯, 5 + r)) == Interval(8 + 7r, Augmented)
+		end
 
 		# for any pitch, adding a unison will not change the register; 
 		# adding an octave (or two) will
