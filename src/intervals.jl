@@ -106,8 +106,8 @@ end
 
 @generated function Interval(::Type{P1}, ::Type{P2}) where {P1 <: Pitch, P2 <: Pitch}
 	n = mod(number(LetterSpace, letter(P2)) - number(LetterSpace, letter(P1)), 7) + 1
-	octaves = (register(P2) - register(P1)) * 7
-	N = n + octaves
+	octaves = (number(P2) - number(P1)) ÷ 12
+	N = n + octaves * 7
 	semis = (number(P2) - number(P1)) % 12
 	base_semis = base(Interval{n, Major})  # use Major/Perfect as baseline
 	diff = semis - base_semis
