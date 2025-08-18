@@ -1,10 +1,4 @@
 
-# Step types for explicit movement
-abstract type Step end
-struct ChromaticStep{N} <: Step end
-struct DiatonicStep{N} <: Step end
-
-
 ## helpers
 
 # base semitones for a major or perfect interval as appropriate
@@ -54,22 +48,6 @@ function Base.:+(::Type{PC}, ::Type{Interval{N, Quality}}) where {PC <: PitchCla
 	simple_target = PitchClass(LineOfFifths, number(LineOfFifths, PC) - 1 + mod(2N - 1, 7))
 	modified_target = modify(simple_target, offset(Interval{N, Quality}))
 	return modified_target
-end
-
-
-# Pitch + ChromaticStep
-@generated function Base.:+(::Type{Pitch{PC, Reg}}, ::Type{ChromaticStep{N}}) where {PC, Reg, N}
-	new_pc = PC + ChromaticStep{N}
-	
-	# Calculate register change
-	old_semi = number(PitchClassSpace, PC)
-	new_semi = number(PitchClassSpace, new_pc)
-	
-	# Register changes when we cross C (semitone 0)
-	crossed = N > 0 ? (new_semi < old_semi) : (new_semi > old_semi)
-	new_register = Reg + (crossed ? (N > 0 ? 1 : -1) : 0)
-	
-	return :(Pitch($new_pc, $new_register))
 end
 
 # Pitch + Interval
