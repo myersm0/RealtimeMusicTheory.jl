@@ -188,7 +188,7 @@ number(::Type{PitchClassSpace}, ::Type{A♮}) = 9
 number(::Type{PitchClassSpace}, ::Type{A♯}) = 10
 number(::Type{PitchClassSpace}, ::Type{B♮}) = 11
 
-# note: these will be MIDI numbers (rather than 0-centered at C4)
+# note: these will be MIDI numbers where middle C = 60, rather than 0-centered at C4
 struct DiscretePitchSpace <: DiscreteSpace end
 TopologyStyle(::Type{DiscretePitchSpace}) = Linear
 SpellingStyle(::Type{DiscretePitchSpace}) = SpecificSpelling
@@ -203,8 +203,12 @@ function Pitch(::Type{DiscretePitchSpace}, ::Val{N}) where N
 	return Pitch(PitchClass(PitchClassSpace, Val(pc_num)), register)
 end
 function number(::Type{DiscretePitchSpace}, ::Type{Pitch{PC, Reg}}) where {PC, Reg}
-	return 12 * (Reg + 1) + number(PitchClassSpace, PC)
+	# note that this function def has been modified from the former, simpler:
+	# `12 * (Reg + 1) + number(PC)` in order to handle edge cases 
+	# where an accidental(s) pushes the pitch into the next register
+	return 12 * (Reg + 1) + number(GPC(PC)) + offset(accidental(PC))
 end
+
 
 # generic prototype
 function number(::Type{P}) where P <: PitchRepresentation end
