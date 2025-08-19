@@ -7,7 +7,7 @@ Fast, compile-time music theory abstractions to support real-time audio applicat
 
 What this means is that all operations _should be_ virtually free at runtime -- less than 1 nanosecond on my machine. With the core design of the package out of the way now, I will be evaluating to what extent I’ve met this goal, how it holds up under real-world usage, and how to address any shortcomings. Notably, there is a negligible compilation overhead the first time you call a function with a given combination of types.
 
-This package was originally intended to be a feature-complete reimplementation of dpsanders's very nice package [MusicTheory.jl](https://github.com/JuliaMusic/MusicTheory.jl), but has since diverged significantly in scope and design. RealtimeMusicTheory centers around the concept of `Pitches` and their organization into MusicalSpaces, specifically _discrete_ spaces, that provide different ways of organizing and navigating pitch relationships. As of version 0.3, I have temporarily dropped support of scale- and chord-related structures, to focus instead on the core building blocks for the time being; but I expect these structures to return in a later version.
+This package was originally intended to be a feature-complete reimplementation of dpsanders's very nice package [MusicTheory.jl](https://github.com/JuliaMusic/MusicTheory.jl), but has since diverged significantly in scope and design. RealtimeMusicTheory centers around the concept of pitches and their organization into MusicalSpaces, specifically _discrete_ spaces, that provide different ways of organizing and navigating pitch relationships. As of version 0.3, I have temporarily dropped support of scale- and chord-related structures, to focus instead on the core building blocks for the time being; but I expect these structures to return in a later version.
 
 I would like to add that I'm not an expert in music theory myself, but have strived for theoretically correct operations and terminology here. I have largely relied on Julian Hook's book _Exploring Musical Spaces_ (Oxford University Press, 2022) as a reference.
 
@@ -73,15 +73,15 @@ Interval(C♮[4], G♭[4])  # d5 (diminished fifth)
 The core abstraction in RealtimeMusicTheory is the `MusicalSpace`. Different spaces provide different ways to organize and navigate pitches.
 
 MusicalSpaces can be classified by three traits: 
-- `TopologyStyle`
-	- A `Circular` topology indicates that the space can be traversed in two directions, `Clockwise` or `Counterclockwise`, with wraparound behavior when you reach the "ends." 
-	- In a `Linear` space, by contrast, there is only one path from any point A to another point B: either from the `Left` or from the `Right`. (For convenience, but somewhat counterintuitively, wraparound indexing is also implemented for Linear spaces.)
-- `SpellingStyle`
-	- A space with `GenericSpelling` uses bare letter names, without accidentals
-	- A space with `SpecificSpelling` recognizes accidentals
-- `RegisterStyle`
-	- A `ClassLevel` space operates at the level of the PitchClass or LetterName, i.e. without register/octave information
-	- A `Registral` space operates at the level of the Pitch, i.e. with designations of register/octave
+- TopologyStyle
+	- A Circular topology indicates that the space can be traversed in two directions, Clockwise or Counterclockwise, with wraparound behavior when you reach the "ends." 
+	- In a Linear space, by contrast, there is only one path from any point A to another point B: either from the Left or from the Right. (For convenience, but somewhat counterintuitively, wraparound indexing is also implemented for Linear spaces.)
+- SpellingStyle
+	- A space with GenericSpelling uses bare letter names, without accidentals
+	- A space with SpecificSpelling recognizes accidentals
+- RegisterStyle
+	- A ClassLevel space operates at the level of the PitchClass or LetterName, i.e. without register/octave information
+	- A Registral space operates at the level of the Pitch, i.e. with designations of register/octave
 
 ```julia
 # LetterSpace - containing the 7 letter names in order:
