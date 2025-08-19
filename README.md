@@ -139,9 +139,9 @@ Find and test enharmonic equivalences:
 is_enharmonic(C♯, D♭)  # true
 is_enharmonic(E♯, F♮)  # true
 
-# Find the first 3 enharmonic spellings of a given PitchClass
+# Find the first 5 enharmonic spellings of a given PitchClass
 # (results will be sorted by the most standard spelling first -- i.e. fewest accidentals)
-find_enharmonics(G♯, 3)  # returns generator yielding: G♯, A♭, F𝄪
+find_enharmonics(C♮, 5)  # C♮, B♯, D♭♭, A♯♯♯, E♭♭♭♭
 ```
 
 
