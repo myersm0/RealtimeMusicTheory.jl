@@ -72,6 +72,13 @@ Interval(C♮[4], G♭[4])  # d5 (diminished fifth)
 
 The core abstraction in RealtimeMusicTheory is the `MusicalSpace`. Different spaces provide different ways to organize and navigate pitches.
 
+#### Motivation
+Before discussing how to work with these spaces, I will first motivate their inclusion by showing how you can use them to extract useful musical facts. A key example is that the enharmonicity of two pitch classes (notwithstanding possible differences in tuning) can be determined by checking whether the distance between those two notes, on the line of fifths, is a multiple of 12. The following is the one-liner constituting this package's `is_enharmonic()` function, to be described later. Given two pitch classes PC1 and PC2, eharmonicity is determined by simply evaluating:
+```
+mod(distance(LineOfFifths, PC1, PC2), 12) == 0
+```
+
+#### Traits
 MusicalSpaces can be classified by three traits: 
 - TopologyStyle
 	- A Circular topology indicates that the space can be traversed in two directions, Clockwise or Counterclockwise, with wraparound behavior when you reach the "ends." 
@@ -83,6 +90,8 @@ MusicalSpaces can be classified by three traits:
 	- A ClassLevel space operates at the level of the PitchClass or LetterName, i.e. without register/octave information
 	- A Registral space operates at the level of the Pitch, i.e. with designations of register/octave
 
+#### Distance and direction
+The traits described above enable querying spaces to check the distance between two elements, and the direction of the path from one to the other (Left/Right or Clockwise/Counterclockwise).
 ```julia
 # LetterSpace - containing the 7 letter names in order:
 distance(LetterSpace, C, E)  # 2 (C→D→E)
@@ -100,7 +109,7 @@ direction(LineOfFifths, C♮, F♮)   # Left (F is to the left of C)
 distance(PitchClassSpace, C♮, D♯) # 3 semitones
 ```
 
-### Space iteration and indexing
+#### Space iteration and indexing
 
 MusicalSpaces support a range-like syntax for generating sequences of pitches:
 ```julia
