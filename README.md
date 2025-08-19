@@ -9,6 +9,8 @@ What this means is that all operations _should be_ virtually free at runtime -- 
 
 This package was originally intended to be a feature-complete reimplementation of dpsanders's very nice package [MusicTheory.jl](https://github.com/JuliaMusic/MusicTheory.jl), but has since diverged significantly in scope and design. RealtimeMusicTheory centers around the concept of `Pitches` and their organization into MusicalSpaces, specifically _discrete_ spaces, that provide different ways of organizing and navigating pitch relationships. As of version 0.3, I have temporarily dropped support of scale- and chord-related structures, to focus instead on the core building blocks for the time being; but I expect these structures to return in a later version.
 
+I would like to add that I'm not an expert in music theory myself, but have strived for theoretically correct operations and terminology here. I have largely relied on Julian Hook's book _Exploring Musical Spaces_ (Oxford University Press, 2022) as a reference.
+
 ## Installation
 In Julia 1.9 or greater:
 ```julia
@@ -21,7 +23,7 @@ Pkg.add("RealtimeMusicTheory")
 using RealtimeMusicTheory
 ```
 
-### Basic Pitch Representations
+### Basic pitch representations
 
 A PitchClass is a note name with optional accidental, but lacking octave/register info:
 ```julia
@@ -44,7 +46,7 @@ A Pitch, by contrast, is the realization of a PitchClass _in a specific octave/r
 middle_c = Pitch(C, 4)        # or Pitch(C♮, 4) or C♮[4]
 ```
 
-### Interval Arithmetic
+### Interval arithmetic
 
 Add intervals to pitches or pitch classes:
 ```julia
