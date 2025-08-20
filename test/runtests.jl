@@ -292,13 +292,43 @@ registers = 1:6
 		end
 	end
 
-	@testset "Performance" begin
-		@test (@allocated letter(C♮)) == 0
-		@test (@allocated number(C♮)) == 0
-		@test (@allocated C♮ + M3) == 0
-		@test (@allocated Pitch(C♮, 4) + P5) == 0
-		@test (@allocated distance(PitchClassSpace, C♮, G♮)) == 0
-		@test (@allocated is_enharmonic(C♮, B♯)) == 0
+# This performance test fails in some Julia versions; see below for update
+#	@testset "Performance" begin
+#		@test (@allocated letter(C♮)) == 0
+#		@test (@allocated number(C♮)) == 0
+#		@test (@allocated C♮ + M3) == 0
+#		@test (@allocated Pitch(C♮, 4) + P5) == 0
+#		@test (@allocated distance(PitchClassSpace, C♮, G♮)) == 0
+#		@test (@allocated is_enharmonic(C♮, B♯)) == 0
+#	end
+	
+	# Test that operations are allocation-free.
+	# Handles compilation/warmup correctly.
+	function test_no_allocations()
+		# List all operations to test
+		operations = [
+			() -> letter(C♮),
+			() -> number(C♮),
+			() -> C♮ + M3,
+			() -> Pitch(C♮, 4) + P5,
+			() -> distance(PitchClassSpace, C♮, G♮),
+			() -> is_enharmonic(C♮, B♯)
+		]
+		# warm up each operation
+		for op in operations
+			op()
+		end
+		# test allocations
+		results = Bool[]
+		for op in operations
+			push!(results, @allocated(op()) == 0)
+		end
+		return results
+	end
+
+	@testset "No allocations" begin
+		results = test_no_allocations()
+		@test all(results)
 	end
 end
 
