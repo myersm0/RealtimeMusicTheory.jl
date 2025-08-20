@@ -10,8 +10,16 @@ struct G <: LetterName end
 struct A <: LetterName end
 struct B <: LetterName end
 
+# todo : make Int args more generic
 struct Accidental{Int} end
+
+"""
+    Accidental(n)
+
+Specify an accidental where `n` is the number of flats (if n < 0) or sharps (if n > 0).
+"""
 Accidental(n::Int) = Accidental{n}
+
 offset(::Type{Accidental{N}}) where N = N
 
 const Natural = Accidental(0)
@@ -29,18 +37,43 @@ const 𝄫 = DoubleFlat
 struct PitchClass{L <: LetterName, A <: Accidental} <: PitchRepresentation end
 struct Pitch{PC <: PitchClass, Register} <: PitchRepresentation end
 
-PitchClass(::Type{L}, ::Type{A}) where {L <: LetterName, A <: Accidental} = 
-	PitchClass{L, A}
+"""
+    PitchClass(L)
 
-PitchClass(::Type{L}, n::Int) where L <: LetterName = 
-	PitchClass{L, Accidental(n)}
-
+Construct a PitchClass with LetterName `L` and a natural accidental sign.
+"""
 PitchClass(::Type{L}) where {L <: LetterName} = 
 	PitchClass{L, Natural}
 
+"""
+    PitchClass(L, A)
+
+Construct a PitchClass with LetterName `L` and Accidental `A`.
+"""
+PitchClass(::Type{L}, ::Type{A}) where {L <: LetterName, A <: Accidental} = 
+	PitchClass{L, A}
+
+# todo: remove this ctor, could be confusing
+PitchClass(::Type{L}, n::Int) where L <: LetterName = 
+	PitchClass{L, Accidental(n)}
+
+"""
+    Pitch(PC, R)
+Construct a Pitch from PitchClass `PC` and register number `R`.
+
+Register number should be between -1 and 8 if you want MIDI-number compliance
+(i.e. pitches numbered from 0 to 119), but no hard limit in either direction is imposed.
+"""
 Pitch(::Type{PC}, register::Int) where {PC <: PitchClass} = 
 	Pitch{PC, register}
 
+"""
+    Pitch(L, A, R)
+Construct a Pitch from letter name `L`, accidental `A` (default: `Natural`), and register number `R`.
+
+Register number should be between -1 and 8 if you want MIDI-number compliance
+(i.e. pitches numbered from 0 to 119), but no hard limit in either direction is imposed.
+"""
 Pitch(::Type{L}, ::Type{A}, register::Int) where {L <: LetterName, A <: Accidental} = 
 	Pitch{PitchClass{L, A}, register}
 
@@ -85,9 +118,38 @@ const G𝄪 = PitchClass(G, DoubleSharp)
 const A𝄪 = PitchClass(A, DoubleSharp)
 const B𝄪 = PitchClass(B, DoubleSharp)
 
+"""
+	 letter(PR)
+
+Get the LetterName of a `PitchRepresentation`.
+"""
 function letter(::Type{PitchRepresentation}) end
+
+"""
+	 accidental(PR)
+
+Get the Accidental of a `PitchRepresentation`.
+"""
 function accidental(::Type{PitchRepresentation}) end
+
+"""
+	 register(PR)
+
+Get the register number of a `PitchRepresentation`, or `nothing` if it's not defined.
+
+This only makes sense for `Pitch` and for any other types (none yet implemented)
+that encode register information, i.e. for which `SpellingStyle(T) == Registral`.
+"""
 function register(::Type{PitchRepresentation}) end
+
+"""
+	 pitch_class(PR)
+
+Get the PitchClass of a `PitchRepresentation`, or `nothing` if it's not defined.
+
+This only makes sense for PitchRepresentation types that contain accidental spellings,
+i.e. types `T` for which `SpellingStyle(T) == SpecificSpelling`.
+"""
 function pitch_class(::Type{PitchRepresentation}) end
 
 letter(::Type{L}) where L <: LetterName = L
@@ -108,11 +170,28 @@ pitch_class(::Type{Pitch{PC, Register}}) where {PC, Register} = PC
 GenericPitchClass(::Type{PC}) where PC <: PitchClass = PitchClass(letter(PC))
 const GPC = GenericPitchClass
 
-sharpen(::Type{PitchClass{L, A}}, n::Int = 1) where {L, A} = PitchClass(L, offset(A) + n)
-flatten(::Type{PitchClass{L, A}}, n::Int = 1) where {L, A} = PitchClass(L, offset(A) - n)
+# todo: the default of n = 1 is not appropriate for this one
+# todo: should be able to modify pitches like this as well
+"""
+	 modify(PC)
+
+Sharpen or flatten a PitchClass `PC` by `n` semitones.
+"""
 modify(::Type{PitchClass{L, A}}, n::Int = 1) where {L, A} = PitchClass(L, offset(A) + n)
 
+"""
+	 sharpen(PC, n = 1)
+
+Sharpen PitchClass `PC` by `n` semitones.
+"""
+sharpen(::Type{PC}, n::Int = 1) where {PC <: PitchClass} = modify(PC, n)
+
+"""
+	 flatten(PC, n = 1)
+
+Flatten PitchClass `PC` by `n` semitones.
+"""
+flatten(::Type{PC}, n::Int = 1) where {PC <: PitchClass} = modify(PC, -n)
+
 Base.getindex(::Type{PC}, r::Integer) where PC <: PitchClass = Pitch(PC, r)
-
-
 
