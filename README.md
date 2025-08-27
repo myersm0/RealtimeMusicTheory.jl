@@ -58,7 +58,7 @@ middle_c + P8  # octave (C♮[5])
 
 Shorthands for common intervals (P1, m2, M2, m3, M3, P4, A4, d5, P5, m6, M6, m7, M7, P8) are predefined, but you can construct any _valid_ interval like this:
 ```julia
-c5 = middle_c + Interval(9, Major)    # major 9th
+d5 = middle_c + Interval(9, Major)    # major 9th
 c6 = middle_c + Interval(15, Perfect)  # two octaves
 ```
 
