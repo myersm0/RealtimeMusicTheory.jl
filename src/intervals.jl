@@ -10,8 +10,25 @@ abstract type AbstractInterval end
 struct GenericInterval{N} <: AbstractInterval end
 struct SpecificInterval{Number, Quality <: IntervalQuality} <: AbstractInterval end
 
+"""
+    GenericInterval(n)
+
+Construct a generic interval of size `n` (1-indexed: 1=unison, 2=second, 8=octave, etc.).
+
+Generic intervals represent the letter-name distance without considering accidentals.
+"""
 GenericInterval(n) = GenericInterval{n}
 
+"""
+    SpecificInterval(n, Q)
+
+Construct a specific interval with interval number `n` and Quality `Q`.
+
+Valid qualities:
+- Perfect: for unison (1), 4th, 5th, and octave (8)
+- Major/Minor: for 2nd, 3rd, 6th, 7th
+- Augmented/Diminished: for any interval
+"""
 function SpecificInterval(n::Int, quality::Type{Q}) where Q <: IntervalQuality
 	simple = mod1(n, 7)
 	(Q == Perfect && !(simple in [1, 4, 5])) && error("Perfect quality only valid for unison, 4th, 5th, and octave")
@@ -104,6 +121,11 @@ end
 
 ## we can now define an Interval constructor that computes an interval based on given pitches
 
+"""
+    Interval(P1, P2)
+
+Compute the specific interval between two pitches.
+"""
 @generated function Interval(::Type{P1}, ::Type{P2}) where {P1 <: Pitch, P2 <: Pitch}
 	n = mod(number(LetterSpace, letter(P2)) - number(LetterSpace, letter(P1)), 7) + 1
 	octaves = (number(P2) - number(P1)) ÷ 12

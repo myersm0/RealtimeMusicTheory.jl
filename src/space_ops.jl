@@ -1,14 +1,28 @@
 
 ## distance
 
-# user-facing distance function; will dispatch appropriate specific function based on traits
+"""
+    distance(MS, T1, T2)
+
+Calculate the distance between two `PitchRepresentation`s in a `MusicalSpace`.
+
+The distance metric depends on the space's topology:
+- Linear spaces: absolute difference in positions
+- Circular spaces: the lesser of clockwise and counterclockwise distances
+"""
 function distance(
 		::Type{MS}, ::Type{T1}, ::Type{T2}
 		) where {MS <: MusicalSpace, T1 <: PitchRepresentation, T2 <: PitchRepresentation}
 	return distance(MS, TopologyStyle(MS), T1, T2)
 end
 
-# user-facing distance function; will dispatch appropriate specific function based on traits
+"""
+    distance(MS, D, T1, T2)
+
+Calculate the directional distance between two `PitchRepresentation`s in a circular `MusicalSpace`.
+
+Direction `D` can be `Clockwise` or `Counterclockwise`. Only valid for circular spaces.
+"""
 function distance(
 		::Type{MS}, ::Type{D}, ::Type{T1}, ::Type{T2}
 		) where {MS <: MusicalSpace, D <: CircularDirection, T1 <: PitchRepresentation, T2 <: PitchRepresentation}
@@ -44,23 +58,30 @@ function distance(
 	return size(MS) - distance(MS, Clockwise, T1, T2)
 end
 
+
 ## direction
 
-# user-facing direction function; will dispatch appropriate specific function based on traits
+"""
+    direction(MS, PC1, PC2)
+
+Determine the direction from PitchRepresentations `PC1` to `PC2` in a `MusicalSpace`.
+
+Returns:
+- For linear spaces: `Left` or `Right`
+- For circular spaces: `Clockwise` or `Counterclockwise` (whichever is shorter)
+"""
 function direction(
 		::Type{MS}, ::Type{PC1}, ::Type{PC2}
 	) where {MS <: MusicalSpace, PC1, PC2}
 	return direction(MS, TopologyStyle(MS), PC1, PC2)
 end
 
-# direction on the number line (Left or Right) for linear spaces
 function direction(
 		::Type{MS}, ::Type{Linear}, ::Type{PC1}, ::Type{PC2}
 	) where {MS <: MusicalSpace, PC1, PC2}
 	return number(MS, PC1) > number(MS, PC2) ? Left : Right
 end
 
-# direction on a circular topology (Clockwise or Counterclockwise)
 function direction(
 		::Type{MS}, ::Type{Circular}, ::Type{T1}, ::Type{T2}
 	) where {MS <: MusicalSpace, T1, T2}
@@ -75,14 +96,25 @@ end
 
 ## enharmonic functions
 
+"""
+    is_enharmonic(PC1, PC2)
+
+Check if two `PitchClass`es are enharmonic (represent the same pitch).
+
+Two pitch classes are enharmonic if their positions on the LineOfFifths differs by a multiple of 12.
+"""
 is_enharmonic(::Type{PC1}, ::Type{PC2}) where {PC1 <: PitchClass, PC2 <: PitchClass} = 
 	mod(distance(LineOfFifths, PC1, PC2), 12) == 0
 
-find_enharmonics(::Type{PC}, n::Int) where {PC <: PitchClass} = 
-	find_enharmonics(PC, D♮, n)
+"""
+    find_enharmonics(PC1, PC2 = D♮, n)
 
-# find the `n` enharmonic equivalents of `PC1` that are closest in LineOfFifths space 
-# to reference pitch `PC2`.
+Find the `n` enharmonic equivalents of `PC1` closest to reference pitch `PC2` on the LineOfFifths.
+
+Returns an iterator of `PitchClass`es sorted by proximity to `PC2` (D♮ by defualt, because
+that is the center or the LineOfFifths, and the notes closest to the center will be the ones
+with the fewest accidentals).
+"""
 function find_enharmonics(::Type{PC1}, ::Type{PC2}, n::Int) where {PC1 <: PitchClass, PC2 <: PitchClass}
 	start = number(LineOfFifths, PC1)
 	reference = number(LineOfFifths, PC2)
@@ -92,6 +124,9 @@ function find_enharmonics(::Type{PC1}, ::Type{PC2}, n::Int) where {PC1 <: PitchC
 	rng = sort(m .+ -radius:12:radius, by = x -> abs(x - reference))
 	return (PitchClass(LineOfFifths, i) for i in Iterators.take(rng, n))
 end
+
+find_enharmonics(::Type{PC}, n::Int) where {PC <: PitchClass} = 
+	find_enharmonics(PC, D♮, n)
 
 
 

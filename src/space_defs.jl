@@ -8,6 +8,11 @@ Base.eltype(::Type{<:GenericSpelling}, ::Any) = LetterName
 Base.eltype(::Type{<:SpecificSpelling}, ::Type{ClassLevel}) = PitchClass
 Base.eltype(::Type{<:SpecificSpelling}, ::Type{Registral}) = Pitch
 
+"""
+    LetterSpace
+
+A circular space containing the 7 letter names (C, D, E, F, G, A, B) in that order.
+"""
 struct LetterSpace <: DiscreteSpace end
 TopologyStyle(::Type{LetterSpace}) = Circular
 SpellingStyle(::Type{LetterSpace}) = GenericSpelling
@@ -33,6 +38,11 @@ number(::Type{LetterSpace}, ::Type{G}) = 4
 number(::Type{LetterSpace}, ::Type{A}) = 5
 number(::Type{LetterSpace}, ::Type{B}) = 6
 
+"""
+    GenericFifthsSpace
+
+A circular space containing the 7 letter names arranged by perfect fifths.
+"""
 struct GenericFifthsSpace <: DiscreteSpace end
 TopologyStyle(::Type{GenericFifthsSpace}) = Circular
 SpellingStyle(::Type{GenericFifthsSpace}) = GenericSpelling
@@ -58,6 +68,11 @@ number(::Type{GenericFifthsSpace}, ::Type{E}) = 4
 number(::Type{GenericFifthsSpace}, ::Type{B}) = 5
 number(::Type{GenericFifthsSpace}, ::Type{F}) = 6
 
+"""
+    GenericThirdsSpace
+
+A circular space containing the 7 letter names arranged by major thirds.
+"""
 struct GenericThirdsSpace <: DiscreteSpace end
 TopologyStyle(::Type{GenericThirdsSpace}) = Circular
 SpellingStyle(::Type{GenericThirdsSpace}) = GenericSpelling
@@ -83,6 +98,14 @@ number(::Type{GenericThirdsSpace}, ::Type{D}) = 4
 number(::Type{GenericThirdsSpace}, ::Type{F}) = 5
 number(::Type{GenericThirdsSpace}, ::Type{A}) = 6
 
+"""
+    LineOfFifths
+
+A linear space containing all the pitch classes arranged by perfect fifths.
+
+This is an infinite space centered at D = 0. Spellings get sharper as you proceed from 
+zero to the right, or flatter to the left.
+"""
 struct LineOfFifths <: DiscreteSpace end
 TopologyStyle(::Type{LineOfFifths}) = Linear
 SpellingStyle(::Type{LineOfFifths}) = SpecificSpelling
@@ -119,6 +142,14 @@ number(::Type{LineOfFifths}, ::Type{B♮}) = 3
 number(::Type{LineOfFifths}, ::Type{PC}) where PC <: PitchClass = 
 	number(LineOfFifths, GPC(PC)) + offset(accidental(PC)) * 7
 
+"""
+    CircleOfFifths
+
+A circular space containing the 12 pitch classes (without enharmonic distinction)
+arranged by perfect fifths.
+
+The standard circle: C, G, D, A, E, B, F♯, C♯, G♯, D♯, A♯, F.
+"""
 struct CircleOfFifths <: DiscreteSpace end
 TopologyStyle(::Type{CircleOfFifths}) = Circular
 SpellingStyle(::Type{CircleOfFifths}) = SpecificSpelling
@@ -153,6 +184,14 @@ number(::Type{CircleOfFifths}, ::Type{D♯}) = 9
 number(::Type{CircleOfFifths}, ::Type{A♯}) = 10
 number(::Type{CircleOfFifths}, ::Type{F♮}) = 11
 
+"""
+    PitchClassSpace
+
+A circular chromatic space containing 12 pitch classes arranged by semitones,
+without enharmonic distinctions.
+
+The standard chromatic scale: C, C♯, D, D♯, E, F, F♯, G, G♯, A, A♯, B.
+"""
 struct PitchClassSpace <: DiscreteSpace end
 TopologyStyle(::Type{PitchClassSpace}) = Circular
 SpellingStyle(::Type{PitchClassSpace}) = SpecificSpelling
@@ -188,7 +227,16 @@ number(::Type{PitchClassSpace}, ::Type{A♮}) = 9
 number(::Type{PitchClassSpace}, ::Type{A♯}) = 10
 number(::Type{PitchClassSpace}, ::Type{B♮}) = 11
 
-# note: these will be MIDI numbers where middle C = 60, rather than 0-centered at C4
+"""
+    DiscretePitchSpace
+
+An infinite linear space of chromatic pitches arranged by semitones,
+without enharmonic distinctions.
+
+Numbers in this space correspond to MIDI numbers, at least within the octave range
+of -1 to 8 (MIDI numbers 0 to 119); but it also extends infinitely in both directions.
+Middle C (C4) = 60.
+"""
 struct DiscretePitchSpace <: DiscreteSpace end
 TopologyStyle(::Type{DiscretePitchSpace}) = Linear
 SpellingStyle(::Type{DiscretePitchSpace}) = SpecificSpelling
