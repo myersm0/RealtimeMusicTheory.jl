@@ -22,17 +22,11 @@ Accidental(n::Int) = Accidental{n}
 
 offset(::Type{Accidental{N}}) where N = N
 
-const Natural = Accidental(0)
-const Sharp = Accidental(1)
-const Flat = Accidental(-1)
-const DoubleSharp = Accidental(2)
-const DoubleFlat = Accidental(-2)
-
-const ♮ = Natural
-const ♯ = Sharp
-const ♭ = Flat
-const 𝄪 = DoubleSharp
-const 𝄫 = DoubleFlat
+const ♮ = const Natural = Accidental(0)
+const ♯ = const Sharp = Accidental(1)
+const ♭ = const Flat = Accidental(-1)
+const 𝄪 = const DoubleSharp = Accidental(2)
+const 𝄫 = const DoubleFlat = Accidental(-2)
 
 struct PitchClass{L <: LetterName, A <: Accidental} <: PitchRepresentation end
 struct Pitch{PC <: PitchClass, Register} <: PitchRepresentation end
