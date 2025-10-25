@@ -10,7 +10,6 @@ struct G <: LetterName end
 struct A <: LetterName end
 struct B <: LetterName end
 
-# todo : make Int args more generic
 struct Accidental{Int} end
 
 """
@@ -18,7 +17,7 @@ struct Accidental{Int} end
 
 Specify an accidental where `n` is the number of flats (if n < 0) or sharps (if n > 0).
 """
-Accidental(n::Int) = Accidental{n}
+Accidental(n::Integer) = Accidental{n}
 
 offset(::Type{Accidental{N}}) where N = N
 
@@ -48,7 +47,7 @@ PitchClass(::Type{L}, ::Type{A}) where {L <: LetterName, A <: Accidental} =
 	PitchClass{L, A}
 
 # todo: remove this ctor, could be confusing
-PitchClass(::Type{L}, n::Int) where L <: LetterName = 
+PitchClass(::Type{L}, n::Integer) where L <: LetterName = 
 	PitchClass{L, Accidental(n)}
 
 """
@@ -58,7 +57,7 @@ Construct a Pitch from PitchClass `PC` and register number `R`.
 Register number should be between -1 and 8 if you want MIDI-number compliance
 (i.e. pitches numbered from 0 to 119), but no hard limit in either direction is imposed.
 """
-Pitch(::Type{PC}, register::Int) where {PC <: PitchClass} = 
+Pitch(::Type{PC}, register::Integer) where {PC <: PitchClass} = 
 	Pitch{PC, register}
 
 """
@@ -71,7 +70,7 @@ Register number should be between -1 and 8 if you want MIDI-number compliance
 Pitch(::Type{L}, ::Type{A}, register::Int) where {L <: LetterName, A <: Accidental} = 
 	Pitch{PitchClass{L, A}, register}
 
-Pitch(::Type{L}, register::Int) where {L <: LetterName} = 
+Pitch(::Type{L}, register::Integer) where {L <: LetterName} = 
 	Pitch{PitchClass{L, Natural}, register}
 
 const C♮ = PitchClass(C, Natural)
@@ -171,21 +170,21 @@ const GPC = GenericPitchClass
 
 Sharpen or flatten a PitchClass `PC` by `n` semitones.
 """
-modify(::Type{PitchClass{L, A}}, n::Int = 1) where {L, A} = PitchClass(L, offset(A) + n)
+modify(::Type{PitchClass{L, A}}, n::Integer = 1) where {L, A} = PitchClass(L, offset(A) + n)
 
 """
 	 sharpen(PC, n = 1)
 
 Sharpen PitchClass `PC` by `n` semitones.
 """
-sharpen(::Type{PC}, n::Int = 1) where {PC <: PitchClass} = modify(PC, n)
+sharpen(::Type{PC}, n::Integer = 1) where {PC <: PitchClass} = modify(PC, n)
 
 """
 	 flatten(PC, n = 1)
 
 Flatten PitchClass `PC` by `n` semitones.
 """
-flatten(::Type{PC}, n::Int = 1) where {PC <: PitchClass} = modify(PC, -n)
+flatten(::Type{PC}, n::Integer = 1) where {PC <: PitchClass} = modify(PC, -n)
 
 Base.getindex(::Type{PC}, r::Integer) where PC <: PitchClass = Pitch(PC, r)
 

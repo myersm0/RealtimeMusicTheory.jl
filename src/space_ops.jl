@@ -115,10 +115,10 @@ Returns an iterator of `PitchClass`es sorted by proximity to `PC2` (D♮ by defu
 that is the center or the LineOfFifths, and the notes closest to the center will be the ones
 with the fewest accidentals).
 """
-function find_enharmonics(::Type{PC1}, ::Type{PC2}, n::Int) where {PC1 <: PitchClass, PC2 <: PitchClass}
+function find_enharmonics(::Type{PC1}, ::Type{PC2}, n::Integer) where {PC1 <: PitchClass, PC2 <: PitchClass}
 	start = number(LineOfFifths, PC1)
 	reference = number(LineOfFifths, PC2)
-	k = round(Int, -start / 12)
+	k = round(Integer, -start / 12)
 	m = start + 12 * k
 	radius = n * 12
 	rng = sort(m .+ -radius:12:radius, by = x -> abs(x - reference))
@@ -153,8 +153,8 @@ end
 
 struct SpaceExpr{Op, Arg1, Arg2} end
 
-Base.:+(::Type{PC}, n::Int) where {PC <: PitchClass} = SpaceExpr{:+, PC, Val{n}}
-Base.:-(::Type{PC}, n::Int) where {PC <: PitchClass} = SpaceExpr{:-, PC, Val{n}}
+Base.:+(::Type{PC}, n::Integer) where {PC <: PitchClass} = SpaceExpr{:+, PC, Val{n}}
+Base.:-(::Type{PC}, n::Integer) where {PC <: PitchClass} = SpaceExpr{:-, PC, Val{n}}
 
 # todo: refactor this to use my Direction traits
 function evaluate_in_space(::Type{S}, ::Type{SpaceExpr{Op, PC, Val{N}}}) where {S <: MusicalSpace, Op, PC, N}
@@ -164,7 +164,7 @@ end
 
 evaluate_in_space(::Type{S}, ::Type{PC}) where {S <: MusicalSpace, PC <: PitchClass} = number(S, PC)
 evaluate_in_space(::Type{S}, ::Type{L}) where {S <: MusicalSpace, L <: LetterName} = number(S, L)
-evaluate_in_space(::Type{S}, n::Int) where {S <: MusicalSpace} = n
+evaluate_in_space(::Type{S}, n::Integer) where {S <: MusicalSpace} = n
 
 
 ## range-like call syntax for indexing into a space
@@ -196,13 +196,17 @@ end
 
 ## helpers for the indexing fns above
 
-function calculate_length(::Type{S}, ::Type{Linear}, start::Int, stop::Int, step::Int) where S <: MusicalSpace
+function calculate_length(
+		::Type{S}, ::Type{Linear}, start::Integer, stop::Integer, step::Integer
+	) where S <: MusicalSpace
 	(step > 0 && stop < start) && return 0
 	(step < 0 && stop > start) && return 0
 	return div(stop - start, step) + 1
 end
 
-function calculate_length(::Type{S}, ::Type{Circular}, start::Int, stop::Int, step::Int) where S <: MusicalSpace
+function calculate_length(
+		::Type{S}, ::Type{Circular}, start::Int, stop::Int, step::Int
+	) where S <: MusicalSpace
 	len = Base.length(S)
 	start = mod(start, len)
 	stop = mod(stop, len)
@@ -216,11 +220,15 @@ function calculate_length(::Type{S}, ::Type{Circular}, start::Int, stop::Int, st
 	return div(dist, abs(step)) + 1
 end
 
-function space_range(::Type{S}, ::Type{Linear}, start::Int, step::Int, len::Int) where S <: MusicalSpace
+function space_range(
+		::Type{S}, ::Type{Linear}, start::Integer, step::Integer, len::Integer
+	) where S <: MusicalSpace
 	return (eltype(S)(S, start + i * step) for i in 0:len-1)
 end
 
-function space_range(::Type{S}, ::Type{Circular}, start::Int, step::Int, len::Int) where S <: MusicalSpace
+function space_range(
+		::Type{S}, ::Type{Circular}, start::Integer, step::Integer, len::Integer
+	) where S <: MusicalSpace
 	space_len = Base.length(S)
 	return (eltype(S)(S, mod(start + i * step, space_len)) for i in 0:len-1)
 end

@@ -200,7 +200,7 @@ Base.IteratorSize(::Type{<:PitchClassSpace}) = Base.HasLength()
 Base.isfinite(::Type{PitchClassSpace}) = true
 Base.size(::Type{PitchClassSpace}) = 12
 Base.length(::Type{PitchClassSpace}) = 12
-PitchClass(n::Int) = PitchClass(PitchClassSpace, Val(n))
+PitchClass(n::Integer) = PitchClass(PitchClassSpace, Val(n))
 PitchClass(::Type{PitchClassSpace}, n::Integer) = PitchClass(PitchClassSpace, Val(n))
 PitchClass(::Type{PitchClassSpace}, ::Val{0}) = C♮
 PitchClass(::Type{PitchClassSpace}, ::Val{1}) = C♯
@@ -243,7 +243,7 @@ SpellingStyle(::Type{DiscretePitchSpace}) = SpecificSpelling
 RegisterStyle(::Type{DiscretePitchSpace}) = Registral
 Base.IteratorSize(::Type{<:DiscretePitchSpace}) = Base.IsInfinite()
 Base.isfinite(::Type{DiscretePitchSpace}) = false
-Pitch(n::Int) = Pitch(DiscretePitchSpace, Val(n))
+Pitch(n::Integer) = Pitch(DiscretePitchSpace, Val(n))
 Pitch(::Type{DiscretePitchSpace}, n::Integer) = Pitch(DiscretePitchSpace, Val(n))
 function Pitch(::Type{DiscretePitchSpace}, ::Val{N}) where N
 	pc_num = N % 12
