@@ -8,6 +8,11 @@ Base.eltype(::Type{<:GenericSpelling}, ::Any) = LetterName
 Base.eltype(::Type{<:SpecificSpelling}, ::Type{ClassLevel}) = PitchClass
 Base.eltype(::Type{<:SpecificSpelling}, ::Type{Registral}) = Pitch
 
+# dispatches to allow passing generic Integer types
+LetterName(::Type{S}, n::Integer) where S <: MusicalSpace = LetterName(S, Int(n))
+PitchClass(::Type{S}, n::Integer) where S <: MusicalSpace = PitchClass(S, Int(n))
+Pitch(::Type{S}, n::Integer) where S <: MusicalSpace = Pitch(S, Int(n))
+
 """
     LetterSpace
 
@@ -21,7 +26,7 @@ Base.IteratorSize(::Type{<:LetterSpace}) = Base.HasLength()
 Base.isfinite(::Type{LetterSpace}) = true
 Base.size(::Type{LetterSpace}) = 7
 Base.length(::Type{LetterSpace}) = 7
-LetterName(::Type{LetterSpace}, n::Integer) = LetterName(LetterSpace, Val(mod(n, 7)))
+LetterName(::Type{LetterSpace}, n::Int) = LetterName(LetterSpace, Val(mod(n, 7)))
 LetterName(::Type{LetterSpace}, ::Val{0}) = C
 LetterName(::Type{LetterSpace}, ::Val{1}) = D
 LetterName(::Type{LetterSpace}, ::Val{2}) = E
@@ -51,7 +56,7 @@ Base.IteratorSize(::Type{<:GenericFifthsSpace}) = Base.HasLength()
 Base.isfinite(::Type{GenericFifthsSpace}) = true
 Base.size(::Type{GenericFifthsSpace}) = 7
 Base.length(::Type{GenericFifthsSpace}) = 7
-LetterName(::Type{GenericFifthsSpace}, n::Integer) = LetterName(GenericFifthsSpace, Val(mod(n, 7)))
+LetterName(::Type{GenericFifthsSpace}, n::Int) = LetterName(GenericFifthsSpace, Val(mod(n, 7)))
 LetterName(::Type{GenericFifthsSpace}, ::Val{0}) = C
 LetterName(::Type{GenericFifthsSpace}, ::Val{1}) = G
 LetterName(::Type{GenericFifthsSpace}, ::Val{2}) = D
@@ -81,7 +86,7 @@ Base.IteratorSize(::Type{<:GenericThirdsSpace}) = Base.HasLength()
 Base.isfinite(::Type{GenericThirdsSpace}) = true
 Base.size(::Type{GenericThirdsSpace}) = 7
 Base.length(::Type{GenericThirdsSpace}) = 7
-LetterName(::Type{GenericThirdsSpace}, n::Integer) = LetterName(GenericThirdsSpace, Val(mod(n, 7)))
+LetterName(::Type{GenericThirdsSpace}, n::Int) = LetterName(GenericThirdsSpace, Val(mod(n, 7)))
 LetterName(::Type{GenericThirdsSpace}, ::Val{0}) = C
 LetterName(::Type{GenericThirdsSpace}, ::Val{1}) = E
 LetterName(::Type{GenericThirdsSpace}, ::Val{2}) = G
@@ -114,7 +119,7 @@ Base.IteratorSize(::Type{<:LineOfFifths}) = Base.IsInfinite()
 Base.isfinite(::Type{LineOfFifths}) = false
 Base.size(::Type{LineOfFifths}) = error("Base.size not implemented for infinite spaces")
 Base.length(::Type{LineOfFifths}) = error("Base.length not implemented for infinite spaces")
-PitchClass(::Type{LineOfFifths}, n::Integer) = PitchClass(LineOfFifths, Val(n))
+PitchClass(::Type{LineOfFifths}, n::Int) = PitchClass(LineOfFifths, Val(n))
 PitchClass(::Type{LineOfFifths}, ::Val{-3}) = F♮
 PitchClass(::Type{LineOfFifths}, ::Val{-2}) = C♮
 PitchClass(::Type{LineOfFifths}, ::Val{-1}) = G♮
@@ -131,7 +136,7 @@ PitchClass(::Type{LineOfFifths}, ::Val{3}) = B♮
 		PitchClass(letter(base_pc), Accidental($accidental_offset))
 	end
 end
-number(::Type{LineOfFifths}, n::Integer) = PitchClass(LineOfFifths, Val(n))
+number(::Type{LineOfFifths}, n::Int) = PitchClass(LineOfFifths, Val(n))
 number(::Type{LineOfFifths}, ::Type{F♮}) = -3
 number(::Type{LineOfFifths}, ::Type{C♮}) = -2
 number(::Type{LineOfFifths}, ::Type{G♮}) = -1
@@ -158,7 +163,7 @@ Base.IteratorSize(::Type{<:CircleOfFifths}) = Base.HasLength()
 Base.isfinite(::Type{CircleOfFifths}) = true
 Base.size(::Type{CircleOfFifths}) = 12
 Base.length(::Type{CircleOfFifths}) = 12
-PitchClass(::Type{CircleOfFifths}, n::Integer) = PitchClass(CircleOfFifths, Val(n))
+PitchClass(::Type{CircleOfFifths}, n::Int) = PitchClass(CircleOfFifths, Val(n))
 PitchClass(::Type{CircleOfFifths}, ::Val{0}) = C♮
 PitchClass(::Type{CircleOfFifths}, ::Val{1}) = G♮
 PitchClass(::Type{CircleOfFifths}, ::Val{2}) = D♮
@@ -200,8 +205,8 @@ Base.IteratorSize(::Type{<:PitchClassSpace}) = Base.HasLength()
 Base.isfinite(::Type{PitchClassSpace}) = true
 Base.size(::Type{PitchClassSpace}) = 12
 Base.length(::Type{PitchClassSpace}) = 12
-PitchClass(n::Integer) = PitchClass(PitchClassSpace, Val(n))
-PitchClass(::Type{PitchClassSpace}, n::Integer) = PitchClass(PitchClassSpace, Val(n))
+PitchClass(n::Int) = PitchClass(PitchClassSpace, Val(n))
+PitchClass(::Type{PitchClassSpace}, n::Int) = PitchClass(PitchClassSpace, Val(n))
 PitchClass(::Type{PitchClassSpace}, ::Val{0}) = C♮
 PitchClass(::Type{PitchClassSpace}, ::Val{1}) = C♯
 PitchClass(::Type{PitchClassSpace}, ::Val{2}) = D♮
@@ -243,8 +248,8 @@ SpellingStyle(::Type{DiscretePitchSpace}) = SpecificSpelling
 RegisterStyle(::Type{DiscretePitchSpace}) = Registral
 Base.IteratorSize(::Type{<:DiscretePitchSpace}) = Base.IsInfinite()
 Base.isfinite(::Type{DiscretePitchSpace}) = false
-Pitch(n::Integer) = Pitch(DiscretePitchSpace, Val(n))
-Pitch(::Type{DiscretePitchSpace}, n::Integer) = Pitch(DiscretePitchSpace, Val(n))
+Pitch(n::Int) = Pitch(DiscretePitchSpace, Val(n))
+Pitch(::Type{DiscretePitchSpace}, n::Int) = Pitch(DiscretePitchSpace, Val(n))
 function Pitch(::Type{DiscretePitchSpace}, ::Val{N}) where N
 	pc_num = N % 12
 	register = (N ÷ 12) - 1

@@ -17,7 +17,7 @@ struct Accidental{Int} end
 
 Specify an accidental where `n` is the number of flats (if n < 0) or sharps (if n > 0).
 """
-Accidental(n::Integer) = Accidental{n}
+Accidental(n::Integer) = Accidental{Int(n)}
 
 offset(::Type{Accidental{N}}) where N = N
 
@@ -58,7 +58,7 @@ Register number should be between -1 and 8 if you want MIDI-number compliance
 (i.e. pitches numbered from 0 to 119), but no hard limit in either direction is imposed.
 """
 Pitch(::Type{PC}, register::Integer) where {PC <: PitchClass} = 
-	Pitch{PC, register}
+	Pitch{PC, Int(register)}
 
 """
     Pitch(L, A, R)
@@ -67,11 +67,11 @@ Construct a Pitch from letter name `L`, accidental `A` (default: `Natural`), and
 Register number should be between -1 and 8 if you want MIDI-number compliance
 (i.e. pitches numbered from 0 to 119), but no hard limit in either direction is imposed.
 """
-Pitch(::Type{L}, ::Type{A}, register::Int) where {L <: LetterName, A <: Accidental} = 
-	Pitch{PitchClass{L, A}, register}
+Pitch(::Type{L}, ::Type{A}, register::Integer) where {L <: LetterName, A <: Accidental} = 
+	Pitch{PitchClass{L, A}, Int(register)}
 
 Pitch(::Type{L}, register::Integer) where {L <: LetterName} = 
-	Pitch{PitchClass{L, Natural}, register}
+	Pitch{PitchClass{L, Natural}, Int(register)}
 
 const C♮ = PitchClass(C, Natural)
 const C♯ = PitchClass(C, Sharp)

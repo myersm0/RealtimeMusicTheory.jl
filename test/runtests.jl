@@ -330,5 +330,24 @@ registers = 1:6
 		results = test_no_allocations()
 		@test all(results)
 	end
+
+	@testset "Invariance for Integer subtypes" begin
+		types = [UInt8, Int32, Int64, UInt64]
+		spaces = [
+			LetterSpace, GenericFifthsSpace, GenericThirdsSpace, 
+			LineOfFifths, CircleOfFifths, PitchClassSpace, DiscretePitchSpace
+		]
+		for T in types
+			@test Pitch(C, 4) == Pitch(C, T(4))
+			@test Accidental(5) == Accidental(T(5))
+			@test Interval(3, Minor) == Interval(T(3), Minor)
+			@test Pitch(C, 4) + Interval(3, Minor) == Pitch(C, 4) + Interval(T(3), Minor)
+			for space in spaces
+				@test eltype(space)(space, 3) == eltype(space)(space, T(3))
+				@test collect(space(1, 10)) == collect(space(T(1), T(10)))
+			end
+		end
+	end
+
 end
 

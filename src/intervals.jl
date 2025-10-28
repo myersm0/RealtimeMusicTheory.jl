@@ -17,7 +17,7 @@ Construct a generic interval of size `n` (1-indexed: 1=unison, 2=second, 8=octav
 
 Generic intervals represent the letter-name distance without considering accidentals.
 """
-GenericInterval(n) = GenericInterval{n}
+GenericInterval(n::Integer) = GenericInterval{Int(n)}
 
 """
     SpecificInterval(n, Q)
@@ -29,11 +29,11 @@ Valid qualities:
 - Major/Minor: for 2nd, 3rd, 6th, 7th
 - Augmented/Diminished: for any interval
 """
-function SpecificInterval(n::Int, quality::Type{Q}) where Q <: IntervalQuality
+function SpecificInterval(n::Integer, quality::Type{Q}) where Q <: IntervalQuality
 	simple = mod1(n, 7)
 	(Q == Perfect && !(simple in [1, 4, 5])) && error("Perfect quality only valid for unison, 4th, 5th, and octave")
 	(Q in [Major, Minor] && !(simple in [2, 3, 6, 7])) && error("Major/minor quality only valid for 2nd, 3rd, 6th, 7th")
-	return SpecificInterval{n, Q}
+	return SpecificInterval{Int(n), Q}
 end
 
 # note: performance hit when using () instead of {} for these

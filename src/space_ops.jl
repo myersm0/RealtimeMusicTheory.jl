@@ -118,14 +118,14 @@ with the fewest accidentals).
 function find_enharmonics(::Type{PC1}, ::Type{PC2}, n::Integer) where {PC1 <: PitchClass, PC2 <: PitchClass}
 	start = number(LineOfFifths, PC1)
 	reference = number(LineOfFifths, PC2)
-	k = round(Integer, -start / 12)
+	k = round(Int, -start / 12)
 	m = start + 12 * k
 	radius = n * 12
 	rng = sort(m .+ -radius:12:radius, by = x -> abs(x - reference))
 	return (PitchClass(LineOfFifths, i) for i in Iterators.take(rng, n))
 end
 
-find_enharmonics(::Type{PC}, n::Int) where {PC <: PitchClass} = 
+find_enharmonics(::Type{PC}, n::Integer) where {PC <: PitchClass} = 
 	find_enharmonics(PC, D♮, n)
 
 
