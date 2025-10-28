@@ -1,7 +1,7 @@
 name = "RealtimeMusicTheory"
 uuid = "2f5b4ea4-0f24-4f3b-80d9-07c43c98ce5f"
 authors = ["Michael Myers"]
-version = "0.3.3"
+version = "0.3.4"
 
 [compat]
 julia = "1.9"
