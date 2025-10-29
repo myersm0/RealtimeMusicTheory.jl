@@ -290,6 +290,16 @@ registers = 1:6
 				end
 			end
 		end
+
+		# test new multiplication operator for Interval
+		tonnetz = [B♭ + i * M3 + j * m3 for i in 4:-1:0, j in 0:4]
+		@test tonnetz == [
+			C𝄪 E♯ G♯ B♮ D♮;
+			A♯ C♯ E♮ G♮ B♭;
+			F♯ A♮ C♮ E♭ G♭;
+			D♮ F♮ A♭ C♭ E𝄫;
+			B♭ D♭ F♭ A𝄫 C𝄫
+		]
 	end
 
 # This performance test fails in some Julia versions; see below for update

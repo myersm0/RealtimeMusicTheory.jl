@@ -118,6 +118,19 @@ function Base.:+(::Type{Pitch{PC, Reg}}, ::Type{Interval{N, Quality}}) where {PC
 	return Pitch(new_pc, new_register)
 end
 
+Base.:*(n::Integer, ::Type{I}) where I <: SpecificInterval = 
+	[I for _ in 1:n]
+
+Base.:*(::Type{I}, n::Integer) where I <: SpecificInterval = 
+	n * I
+
+# allow adding a vector of intervals to a pitch
+Base.:+(::Type{PC}, intervals::Vector) where PC <: PitchClass = 
+    foldl(+, intervals; init = PC)
+
+Base.:+(::Type{P}, intervals::Vector) where P <: Pitch = 
+    foldl(+, intervals; init = P)
+
 
 ## we can now define an Interval constructor that computes an interval based on given pitches
 
