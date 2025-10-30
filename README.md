@@ -58,24 +58,27 @@ middle_c + P8  # octave (C♮[5])
 
 Shorthands for common intervals (P1, m2, M2, m3, M3, P4, A4, d5, P5, m6, M6, m7, M7, P8) are predefined, but you can construct any _valid_ interval like this:
 ```julia
-d5 = middle_c + Interval(9, Major)    # major 9th
-c6 = middle_c + Interval(15, Perfect)  # two octaves
+middle_c + Interval(9, Major)    # major 9th
+middle_c + Interval(15, Perfect)  # two octaves
 ```
 
 Compute intervals between pitches:
 ```julia
-Interval(C♮[4], E♮[4])  # M3 (major third)
-Interval(C♮[4], G♭[4])  # d5 (diminished fifth)
+julia> Interval(C♮[4], E♮[4])
+M3 (alias for SpecificInterval{3, Major})
+
+julia> Interval(C♮[4], G♭[4])
+d5 (alias for SpecificInterval{5, Diminished})
 ```
 
 Concatenated repetition of intervals is also defined similar to string repetitions in base Julia. For example, to raise middle C by two octaves:
-```
-Pitch(C♮, 4) + P8^2  # results in Pitch{C♮, 6}
+```julia
+julia> Pitch(C♮, 4) + P8^2
+Pitch{C♮, 6}
 ```
 
 This could be useful for concisely generating [Tonnetz](https://en.wikipedia.org/wiki/Tonnetz) spaces. For example, to generate a small Tonnetz by minor thirds along the rows and major thirds along the columns:
-```
-tonnetz = [B♭ + M3^i + m3^j for i in 4:-1:0, j in 0:4]
+```julia
 julia> tonnetz = [B♭ + M3^i + m3^j for i in 4:-1:0, j in 0:4]
 5×5 Matrix{DataType}:
  C𝄪  E♯  G♯  B♮  D♮
