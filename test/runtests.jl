@@ -291,7 +291,7 @@ registers = 1:6
 			end
 		end
 
-		# test new multiplication operator for Interval
+		# test new ^ operator for Interval repetition
 		tonnetz = [B♭ + M3^i + m3^j for i in 4:-1:0, j in 0:4]
 		@test tonnetz == [
 			C𝄪 E♯ G♯ B♮ D♮;

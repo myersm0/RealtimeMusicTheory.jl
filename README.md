@@ -68,6 +68,23 @@ Interval(C♮[4], E♮[4])  # M3 (major third)
 Interval(C♮[4], G♭[4])  # d5 (diminished fifth)
 ```
 
+Concatenated repetition of intervals is also defined similar to string repetitions in base Julia. For example, to raise middle C by two octaves:
+```
+Pitch(C♮, 4) + P8^2  # results in Pitch{C♮, 6}
+```
+
+This could be useful for concisely generating [Tonnetz](https://en.wikipedia.org/wiki/Tonnetz) spaces. For example, to generate a small Tonnetz by minor thirds along the rows and major thirds along the columns:
+```
+tonnetz = [B♭ + M3^i + m3^j for i in 4:-1:0, j in 0:4]
+julia> tonnetz = [B♭ + M3^i + m3^j for i in 4:-1:0, j in 0:4]
+5×5 Matrix{DataType}:
+ C𝄪  E♯  G♯  B♮  D♮
+ A♯  C♯  E♮  G♮  B♭
+ F♯  A♮  C♮  E♭  G♭
+ D♮  F♮  A♭  C♭  E𝄫
+ B♭  D♭  F♭  A𝄫  C𝄫
+```
+
 ### MusicalSpaces
 
 The core abstraction in RealtimeMusicTheory is the `MusicalSpace`. Different spaces provide different ways to organize and navigate pitches.
