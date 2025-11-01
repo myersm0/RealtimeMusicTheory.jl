@@ -44,6 +44,7 @@ c_triple_flat = PitchClass(C, Accidental(-3))
 A Pitch, by contrast, is the realization of a PitchClass _in a specific octave/register_. For example, middle C lies in the 4th register:
 ```julia
 middle_c = Pitch(C, 4)        # or Pitch(C♮, 4) or C♮[4]
+middel_c = Pitch(60)          # equivalently, using a MIDI number 60 (middle C)
 ```
 
 ### Interval arithmetic
