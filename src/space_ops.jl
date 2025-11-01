@@ -143,7 +143,7 @@ function move(::Type{MS}, ::Type{Circular}, ::Type{T}, steps::Integer) where {MS
 end
 
 function move(::Type{MS}, ::Type{Linear}, ::Type{T}, steps::Integer) where {MS <: MusicalSpace, T}
-	new_pos = number(MS, L) + steps
+	new_pos = number(MS, T) + steps
 	return eltype(MS)(MS, new_pos)
 end
 
@@ -162,8 +162,9 @@ function evaluate_in_space(::Type{S}, ::Type{SpaceExpr{Op, PC, Val{N}}}) where {
 	return Op == :+ ? base_pos + N : base_pos - N
 end
 
-evaluate_in_space(::Type{S}, ::Type{PC}) where {S <: MusicalSpace, PC <: PitchClass} = number(S, PC)
 evaluate_in_space(::Type{S}, ::Type{L}) where {S <: MusicalSpace, L <: LetterName} = number(S, L)
+evaluate_in_space(::Type{S}, ::Type{PC}) where {S <: MusicalSpace, PC <: PitchClass} = number(S, PC)
+evaluate_in_space(::Type{S}, ::Type{P}) where {S <: MusicalSpace, P <: Pitch} = number(S, P)
 evaluate_in_space(::Type{S}, n::Integer) where {S <: MusicalSpace} = n
 
 
