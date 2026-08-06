@@ -49,13 +49,13 @@ end
 function distance(
 		::Type{MS}, ::Type{Circular}, ::Type{Clockwise}, ::Type{T1}, ::Type{T2}
 	) where {MS <: MusicalSpace, T1 <: PitchRepresentation, T2 <: PitchRepresentation}
-	return mod(number(MS, T2) - number(MS, T1), length(MS))
+	return mod(number(MS, T2) - number(MS, T1), cardinality(MS))
 end
 
 function distance(
 		::Type{MS}, ::Type{Circular}, ::Type{Counterclockwise}, ::Type{T1}, ::Type{T2}
 	) where {MS <: MusicalSpace, T1 <: PitchRepresentation, T2 <: PitchRepresentation}
-	return size(MS) - distance(MS, Clockwise, T1, T2)
+	return mod(number(MS, T1) - number(MS, T2), cardinality(MS))
 end
 
 
@@ -87,8 +87,8 @@ function direction(
 	) where {MS <: MusicalSpace, T1, T2}
 	pos1 = number(MS, T1)
 	pos2 = number(MS, T2)
-	forward_dist = mod(pos2 - pos1, size(MS))
-	backward_dist = mod(pos1 - pos2, size(MS))
+	forward_dist = mod(pos2 - pos1, cardinality(MS))
+	backward_dist = mod(pos1 - pos2, cardinality(MS))
 	return forward_dist <= backward_dist ? Clockwise : Counterclockwise
 end
 
@@ -138,7 +138,7 @@ function move(::Type{MS}, ::Type{T}, steps::Integer) where {MS <: MusicalSpace, 
 end
 
 function move(::Type{MS}, ::Type{Circular}, ::Type{T}, steps::Integer) where {MS <: MusicalSpace, T}
-	new_pos = mod(number(MS, T) + steps, size(MS))
+	new_pos = mod(number(MS, T) + steps, cardinality(MS))
 	return eltype(MS)(MS, new_pos)
 end
 
@@ -208,7 +208,7 @@ end
 function calculate_length(
 		::Type{S}, ::Type{Circular}, start::Int, stop::Int, step::Int
 	) where S <: MusicalSpace
-	len = Base.length(S)
+	len = cardinality(S)
 	start = mod(start, len)
 	stop = mod(stop, len)
 	if step > 0
@@ -230,7 +230,7 @@ end
 function space_range(
 		::Type{S}, ::Type{Circular}, start::Integer, step::Integer, len::Integer
 	) where S <: MusicalSpace
-	space_len = Base.length(S)
+	space_len = cardinality(S)
 	return (eltype(S)(S, mod(start + i * step, space_len)) for i in 0:len-1)
 end
 

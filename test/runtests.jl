@@ -58,7 +58,7 @@ registers = 1:6
 		@test all_pitch_numbers == 0:119
 		
 		@testset "LetterSpace (Generic, Circular)" begin
-			test_nums = collect(0:length(LetterSpace) - 1)
+			test_nums = collect(0:cardinality(LetterSpace) - 1)
 			@test [number(l) for l in letters] == test_nums
 			for acc in -2:2
 				@test [number(LetterSpace, PitchClass(l, acc)) for l in letters] == test_nums
@@ -72,6 +72,8 @@ registers = 1:6
 					@test distance(LetterSpace, letters[j], letters[i]) == abs(d)
 					@test direction(LetterSpace, letters[i], letters[j]) == (d < 0 ? Counterclockwise : Clockwise)
 					@test direction(LetterSpace, letters[j], letters[i]) == (d <= 0 ? Clockwise : Counterclockwise)
+					@test distance(LetterSpace, Clockwise, letters[i], letters[j]) == mod(j - i, 7)
+					@test distance(LetterSpace, Counterclockwise, letters[i], letters[j]) == mod(i - j, 7)
 				end
 			end
 		end
@@ -120,7 +122,8 @@ registers = 1:6
 		@testset "LineOfFifths (Linear, Infinite)" begin
 			@test Base.isfinite(LineOfFifths) == false
 			@test TopologyStyle(LineOfFifths) == Linear
-			@test_throws ErrorException Base.size(LineOfFifths)
+			@test_throws ErrorException cardinality(LineOfFifths)
+			@test_throws ErrorException length(LineOfFifths)
 			# adjacent elements should always be 5 semitones apart from each other:
 			for i in -24:24
 				a = PitchClass(LineOfFifths, i - 1)
@@ -158,7 +161,8 @@ registers = 1:6
 		
 		# todo: make this more comprehensive; e.g. modeled on the above
 		@testset "CircleOfFifths" begin
-			@test Base.size(CircleOfFifths) == 12
+			@test cardinality(CircleOfFifths) == 12
+			@test length(CircleOfFifths) == cardinality(CircleOfFifths)
 			@test TopologyStyle(CircleOfFifths) == Circular
 			@test number(CircleOfFifths, C♮) == 0
 			@test number(CircleOfFifths, G♮) == 1
@@ -166,6 +170,8 @@ registers = 1:6
 			@test distance(CircleOfFifths, C♮, G♮) == 1
 			@test distance(CircleOfFifths, C♮, F♮) == 1  # Other direction
 			@test distance(CircleOfFifths, C♮, F♯) == 6  # Opposite side
+			@test distance(CircleOfFifths, Clockwise, C♮, C♮) == 0
+			@test distance(CircleOfFifths, Counterclockwise, C♮, C♮) == 0
 		end
 
 		# todo: test indexing of other spaces in this way
@@ -193,7 +199,7 @@ registers = 1:6
 	@testset "Interval arithmetic" begin
 		for l in letters
 			for n in 1:14
-				expected_distance = (n - 1) % length(LetterSpace)
+				expected_distance = (n - 1) % cardinality(LetterSpace)
 				@test distance(LetterSpace, Clockwise, l, l + GenericInterval(n)) == expected_distance
 				# for PitchClass, sharpening of flattening should not change generic distance:
 				for acc in -3:3
