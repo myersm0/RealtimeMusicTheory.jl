@@ -2,7 +2,7 @@ using RealtimeMusicTheory
 using BenchmarkTools
 using Test
 
-import RealtimeMusicTheory: semitones, offset, number
+import RealtimeMusicTheory: semitones, offset, number, is_perfect_family
 
 # todo: add iteration/enumeration of spaces so that we don't have to define this manually
 letters = [C, D, E, F, G, A, B]
@@ -272,11 +272,17 @@ registers = 1:6
 
 		@test_throws ErrorException Interval(E♮[4], C♮[4])
 
-		simple_intervals = [
+		# compound diminished intervals reduce to their simple interval class
+		@test C♮ + Interval(11, Diminished) == F♭
+		@test C♮ + Interval(12, Diminished) == G♭
+		@test C♮ + Interval(15, Diminished) == C♭
+		@test C♮ + Interval(9, Diminished) == D𝄫
+
+		test_intervals = [
 			Interval(n, quality)
-			for n in 1:8
+			for n in 1:15
 			for quality in (
-				n in (1, 4, 5, 8) ?
+				is_perfect_family(n) ?
 					[Perfect, Augmented, Diminished] :
 					[Major, Minor, Augmented, Diminished]
 			)
@@ -285,7 +291,7 @@ registers = 1:6
 		@testset "Interval round trip" begin
 			for l in letters, acc in -1:1
 				p = Pitch(l, Accidental(acc), 4)
-				for interval in simple_intervals
+				for interval in test_intervals
 					@test Interval(p, p + interval) == interval
 				end
 			end

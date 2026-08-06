@@ -19,6 +19,8 @@ Generic intervals represent the letter-name distance without considering acciden
 """
 GenericInterval(n::Integer) = GenericInterval{Int(n)}
 
+is_perfect_family(n::Integer) = mod1(n, 7) in (1, 4, 5)
+
 """
     SpecificInterval(n, Q)
 
@@ -30,9 +32,10 @@ Valid qualities:
 - Augmented/Diminished: for any interval
 """
 function SpecificInterval(n::Integer, quality::Type{Q}) where Q <: IntervalQuality
-	simple = mod1(n, 7)
-	(Q == Perfect && !(simple in [1, 4, 5])) && error("Perfect quality only valid for unison, 4th, 5th, and octave")
-	(Q in [Major, Minor] && !(simple in [2, 3, 6, 7])) && error("Major/minor quality only valid for 2nd, 3rd, 6th, 7th")
+	Q == Perfect && !is_perfect_family(n) && 
+		error("Perfect quality only valid for unison, 4th, 5th, and octave")
+	Q in (Major, Minor) && is_perfect_family(n) && 
+		error("Major/minor quality only valid for 2nd, 3rd, 6th, 7th")
 	return SpecificInterval{Int(n), Q}
 end
 
@@ -72,7 +75,7 @@ offset(::Type{Interval{N, Minor}}) where N	  = -1
 offset(::Type{Interval{N, Major}}) where N	  =  0
 offset(::Type{Interval{N, Perfect}}) where N	=  0
 offset(::Type{Interval{N, Augmented}}) where N  =  1
-offset(::Type{Interval{N, Diminished}}) where N = N in [1, 4, 5, 8] ? -1 : -2
+offset(::Type{Interval{N, Diminished}}) where N = is_perfect_family(N) ? -1 : -2
 
 # position of a pitch in letter space, unrolled across registers
 generic_position(::Type{P}) where P <: Pitch = 
@@ -147,7 +150,7 @@ Compute the specific interval between two pitches.
 	simple_number = mod(steps, 7) + 1
 	baseline = base(Interval{simple_number, Major}) + 12 * number_of_octaves
 	deviation = number(P2) - number(P1) - baseline
-	quality = if simple_number in (1, 4, 5)
+	quality = if is_perfect_family(simple_number)
 		deviation ==  0 ? Perfect :
 		deviation ==  1 ? Augmented :
 		deviation == -1 ? Diminished :
