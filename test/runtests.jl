@@ -3,6 +3,7 @@ using BenchmarkTools
 using Test
 
 import RealtimeMusicTheory: semitones, offset, number, is_perfect_family
+import RealtimeMusicTheory: positive_direction, negative_direction
 
 # todo: add iteration/enumeration of spaces so that we don't have to define this manually
 letters = [C, D, E, F, G, A, B]
@@ -49,6 +50,31 @@ registers = 1:6
 				end
 			end
 		end
+	end
+
+	@testset "Directions" begin
+		@test Left <: LinearDirection
+		@test Right <: LinearDirection
+		@test Clockwise <: CircularDirection
+		@test Counterclockwise <: CircularDirection
+		@test LinearDirection <: Direction
+		@test CircularDirection <: Direction
+
+		@test positive_direction(Linear) == Right
+		@test negative_direction(Linear) == Left
+		@test positive_direction(Circular) == Clockwise
+		@test negative_direction(Circular) == Counterclockwise
+
+		@test sign(Left) == -1
+		@test sign(Right) == 1
+		@test sign(Clockwise) == 1
+		@test sign(Counterclockwise) == -1
+
+		@test Right * 5 == 5
+		@test Left * 5 == -5
+		@test 5 * Counterclockwise == -5
+		@test Clockwise * Counterclockwise == -1
+		@test Left * Left == 1
 	end
 
 	@testset "Spaces" begin
