@@ -13,7 +13,7 @@ With the core design of the package out of the way now, I am working on characte
 
 This package was originally intended to be a feature-complete reimplementation of dpsanders's very nice package [MusicTheory.jl](https://github.com/JuliaMusic/MusicTheory.jl), but has since diverged significantly in scope and design. RealtimeMusicTheory centers around the concept of pitches and their organization into MusicalSpaces, specifically _discrete_ spaces, that provide different ways of organizing and navigating pitch relationships. As of version 0.3, I have temporarily dropped support of scale- and chord-related structures, to focus instead on the core building blocks for the time being; but I expect these structures to return in a later version.
 
-I would like to add that I'm not an expert in music theory myself, but have strived for theoretically correct operations and terminology here. I have largely relied on Julian Hook's book _Exploring Musical Spaces_ (Oxford University Press, 2022) as a reference.
+I have strived for theoretically correct operations and terminology. I have largely relied on Julian Hook's book _Exploring Musical Spaces_ (Oxford University Press, 2022) as a reference.
 
 ## Installation
 In Julia 1.9 or greater:
@@ -128,6 +128,18 @@ MusicalSpaces can be classified by three traits:
 - RegisterStyle
 	- A ClassLevel space operates at the level of the PitchClass or LetterName, i.e. without register/octave information
 	- A Registral space operates at the level of the Pitch, i.e. with designations of register/octave
+
+Implemented spaces include:
+| Space                | Elements                       | Topology |
+| -------------------- | ------------------------------ | -------- |
+| `LetterSpace`        | Letter names                   | Circular |
+| `GenericFifthsSpace` | Letter names in fifths order   | Circular |
+| `GenericThirdsSpace` | Letter names in thirds order   | Circular |
+| `LineOfFifths`       | Spelled pitch classes          | Linear   |
+| `CircleOfFifths`     | Twelve canonical pitch classes | Circular |
+| `PitchClassSpace`    | Twelve chromatic positions     | Circular |
+| `DiscretePitchSpace` | Registral pitches              | Linear   |
+
 
 #### Cardinality
 Finite spaces report their size through `cardinality`, which is also what `Base.length` returns for them. Infinite spaces error, so check `Base.isfinite` first if you don't know which you have.
