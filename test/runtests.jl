@@ -328,7 +328,34 @@ registers = 1:6
 				p = Pitch(l, Accidental(acc), 4)
 				for interval in test_intervals
 					@test Interval(p, p + interval) == interval
+					@test (p + interval) - interval == p
+					@test Interval(p - interval, p) == interval
 				end
+			end
+		end
+
+		@testset "Descending displacement" begin
+			@test C♮ - P5 == F♮
+			@test C♮ - P4 == G♮
+			@test C♮ - M3 == A♭
+			@test C♮ - m3 == A♮
+			@test C♮ - Interval(5, Diminished) == F♯
+			@test C♮ - Interval(5, Augmented) == F♭
+			@test C♮ - P8 == C♮
+			@test C - GenericInterval(3) == A
+
+			@test C♮[4] - P8 == C♮[3]
+			@test C♮[4] - P5 == F♮[3]
+			@test C♮[4] - m2 == B♮[3]
+			@test C♮[4] - P1 == C♮[4]
+			@test C♮[4] - P8^2 == C♮[2]
+			@test C♮[4] - Interval(15, Perfect) == C♮[2]
+			@test B♮[4] - Interval(8, Augmented) == B♭[3]
+
+			for l in letters, acc in -1:1, reg in 3:5
+				p = Pitch(l, Accidental(acc), reg)
+				@test register(p - P1) == reg
+				@test register(p - P8) == reg - 1
 			end
 		end
 

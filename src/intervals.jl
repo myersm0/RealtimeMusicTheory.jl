@@ -89,51 +89,55 @@ function semitones(interval::Type{Interval{N, Quality}}) where {N, Quality}
 end
 
 
+## displacement of a pitch representation by an interval
+
+"""
+	 displace(PR, I, D)
+
+Displace a `PitchRepresentation` by interval `I` in `Direction` `D`.
+
+`Right` transposes upward and `Left` downward. This is a group action on pitches
+rather than arithmetic among intervals: `I` carries magnitude only, and the direction
+is supplied separately, so descending is the exact negation of ascending.
+"""
+function displace(
+		::Type{PC}, ::Type{Interval{N, Quality}}, ::Type{D}
+	) where {PC <: PitchClass, N, Quality, D <: Direction}
+	fifths = mod(2N - 1, 7) - 1 + 7 * offset(Interval{N, Quality})
+	return PitchClass(LineOfFifths, number(LineOfFifths, PC) + sign(D) * fifths)
+end
+
+function displace(
+		::Type{Pitch{PC, Reg}}, ::Type{Interval{N, Quality}}, ::Type{D}
+	) where {PC, Reg, N, Quality, D <: Direction}
+	displaced = displace(PC, Interval{N, Quality}, D)
+	position = generic_position(Pitch{PC, Reg}) + sign(D) * (N - 1)
+	return Pitch(displaced, fld(position, 7))
+end
+
+displace(::Type{L}, ::Type{GenericInterval{N}}, ::Type{D}) where {L <: LetterName, N, D <: Direction} = 
+	move(LetterSpace, L, sign(D) * (N - 1))
+
+displace(::Type{PC}, ::Type{GenericInterval{N}}, ::Type{D}) where {PC <: PitchClass, N, D <: Direction} = 
+	PitchClass(displace(letter(PC), GenericInterval{N}, D), accidental(PC))
+
+
 ## operator overloads for interval arithmetic
 
-# generic
-function Base.:+(::Type{PitchRepresentation}, ::Type{AbstractInterval}) end
-function Base.:-(::Type{PitchRepresentation}, ::Type{AbstractInterval}) 
-	return error("Subtraction of intervals is not defined")
-end
+Base.:+(::Type{P}, ::Type{I}) where {P <: PitchRepresentation, I <: AbstractInterval} = 
+	displace(P, I, Right)
 
-# Letter + GenericInterval
-Base.:+(::Type{L}, ::Type{GenericInterval{N}}) where {L <: LetterName, N} = 
-	move(LetterSpace, L, N - 1)
+Base.:-(::Type{P}, ::Type{I}) where {P <: PitchRepresentation, I <: AbstractInterval} = 
+	displace(P, I, Left)
 
-# PitchClass + GenericInterval
-Base.:+(::Type{PC}, ::Type{GenericInterval{N}}) where {PC <: PitchClass, N} = 
-	PitchClass(letter(PC) + GenericInterval{N}, accidental(PC))
-
-# PitchClass + Interval
-function Base.:+(::Type{PC}, ::Type{Interval{N, Quality}}) where {PC <: PitchClass, N, Quality}
-	simple_target = PitchClass(LineOfFifths, number(LineOfFifths, PC) - 1 + mod(2N - 1, 7))
-	modified_target = modify(simple_target, offset(Interval{N, Quality}))
-	return modified_target
-end
-
-# Pitch + Interval
-function Base.:+(::Type{Pitch{PC, Reg}}, ::Type{Interval{N, Quality}}) where {PC, Reg, N, Quality}
-	new_pc = PC + Interval{N, Quality}
-	octaves = (N - 1) ÷ 7
-	# check if we've wrapped in letter space
-	old_letter_num = number(LetterSpace, letter(PC))
-	new_letter_num = number(LetterSpace, letter(new_pc))
-	steps_within = mod(N - 1, 7)
-	wrapped = steps_within > 0 && new_letter_num < old_letter_num
-	new_register = Reg + octaves + (wrapped ? 1 : 0)
-	return Pitch(new_pc, new_register)
-end
-
-Base.:^(::Type{I}, n::Integer) where I <: SpecificInterval = 
+Base.:^(::Type{I}, n::Integer) where I <: AbstractInterval = 
 	[I for _ in 1:n]
 
-# allow adding a vector of intervals to a pitch
-Base.:+(::Type{PC}, intervals::Vector) where PC <: PitchClass = 
-    foldl(+, intervals; init = PC)
+Base.:+(::Type{P}, intervals::Vector) where P <: PitchRepresentation = 
+	foldl(+, intervals; init = P)
 
-Base.:+(::Type{P}, intervals::Vector) where P <: Pitch = 
-    foldl(+, intervals; init = P)
+Base.:-(::Type{P}, intervals::Vector) where P <: PitchRepresentation = 
+	foldl(-, intervals; init = P)
 
 
 ## we can now define an Interval constructor that computes an interval based on given pitches
