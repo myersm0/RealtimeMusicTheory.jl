@@ -14,17 +14,17 @@ abstract type Circular <: TopologyStyle end
 
 ## topology-related traits
 abstract type Direction end
-abstract type LinearDirection end
+abstract type LinearDirection <: Direction end
 struct Left <: LinearDirection end
 struct Right <: LinearDirection end
-abstract type CircularDirection end
+abstract type CircularDirection <: Direction end
 struct Clockwise <: CircularDirection end
 struct Counterclockwise <: CircularDirection end
 
-negative_direction(::Linear) = Left
-positive_direction(::Linear) = Right
-positive_direction(::Circular) = Clockwise
-negative_direction(::Circular) = Counterclockwise
+positive_direction(::Type{Linear}) = Right
+negative_direction(::Type{Linear}) = Left
+positive_direction(::Type{Circular}) = Clockwise
+negative_direction(::Type{Circular}) = Counterclockwise
 
 Base.sign(::Type{Left}) = -1
 Base.sign(::Type{Right}) = 1
@@ -33,4 +33,5 @@ Base.sign(::Type{Counterclockwise}) = -1
 
 Base.:*(::Type{D}, x) where D <: Direction = sign(D) * x
 Base.:*(x, ::Type{D}) where D <: Direction = sign(D) * x
+Base.:*(::Type{D1}, ::Type{D2}) where {D1 <: Direction, D2 <: Direction} = sign(D1) * sign(D2)
 

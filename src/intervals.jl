@@ -19,6 +19,8 @@ Generic intervals represent the letter-name distance without considering acciden
 """
 GenericInterval(n::Integer) = GenericInterval{Int(n)}
 
+is_perfect_family(n::Integer) = mod1(n, 7) in (1, 4, 5)
+
 """
     SpecificInterval(n, Q)
 
@@ -30,9 +32,10 @@ Valid qualities:
 - Augmented/Diminished: for any interval
 """
 function SpecificInterval(n::Integer, quality::Type{Q}) where Q <: IntervalQuality
-	simple = mod1(n, 7)
-	(Q == Perfect && !(simple in [1, 4, 5])) && error("Perfect quality only valid for unison, 4th, 5th, and octave")
-	(Q in [Major, Minor] && !(simple in [2, 3, 6, 7])) && error("Major/minor quality only valid for 2nd, 3rd, 6th, 7th")
+	Q == Perfect && !is_perfect_family(n) && 
+		error("Perfect quality only valid for unison, 4th, 5th, and octave")
+	Q in (Major, Minor) && is_perfect_family(n) && 
+		error("Major/minor quality only valid for 2nd, 3rd, 6th, 7th")
 	return SpecificInterval{Int(n), Q}
 end
 
@@ -72,7 +75,11 @@ offset(::Type{Interval{N, Minor}}) where N	  = -1
 offset(::Type{Interval{N, Major}}) where N	  =  0
 offset(::Type{Interval{N, Perfect}}) where N	=  0
 offset(::Type{Interval{N, Augmented}}) where N  =  1
-offset(::Type{Interval{N, Diminished}}) where N = N in [1, 4, 5, 8] ? -1 : -2
+offset(::Type{Interval{N, Diminished}}) where N = is_perfect_family(N) ? -1 : -2
+
+# position of a pitch in letter space, unrolled across registers
+generic_position(::Type{P}) where P <: Pitch = 
+	number(LetterSpace, letter(P)) + 7 * register(P)
 
 function semitones(interval::Type{Interval{N, Quality}}) where {N, Quality}
 	simple_n = (N - 1) % 7 + 1 # 1-based (1=unison, 8=octave)
@@ -82,51 +89,55 @@ function semitones(interval::Type{Interval{N, Quality}}) where {N, Quality}
 end
 
 
+## displacement of a pitch representation by an interval
+
+"""
+	 displace(PR, I, D)
+
+Displace a `PitchRepresentation` by interval `I` in `Direction` `D`.
+
+`Right` transposes upward and `Left` downward. This is a group action on pitches
+rather than arithmetic among intervals: `I` carries magnitude only, and the direction
+is supplied separately, so descending is the exact negation of ascending.
+"""
+function displace(
+		::Type{PC}, ::Type{Interval{N, Quality}}, ::Type{D}
+	) where {PC <: PitchClass, N, Quality, D <: Direction}
+	fifths = mod(2N - 1, 7) - 1 + 7 * offset(Interval{N, Quality})
+	return PitchClass(LineOfFifths, number(LineOfFifths, PC) + sign(D) * fifths)
+end
+
+function displace(
+		::Type{Pitch{PC, Reg}}, ::Type{Interval{N, Quality}}, ::Type{D}
+	) where {PC, Reg, N, Quality, D <: Direction}
+	displaced = displace(PC, Interval{N, Quality}, D)
+	position = generic_position(Pitch{PC, Reg}) + sign(D) * (N - 1)
+	return Pitch(displaced, fld(position, 7))
+end
+
+displace(::Type{L}, ::Type{GenericInterval{N}}, ::Type{D}) where {L <: LetterName, N, D <: Direction} = 
+	move(LetterSpace, L, sign(D) * (N - 1))
+
+displace(::Type{PC}, ::Type{GenericInterval{N}}, ::Type{D}) where {PC <: PitchClass, N, D <: Direction} = 
+	PitchClass(displace(letter(PC), GenericInterval{N}, D), accidental(PC))
+
+
 ## operator overloads for interval arithmetic
 
-# generic
-function Base.:+(::Type{PitchRepresentation}, ::Type{AbstractInterval}) end
-function Base.:-(::Type{PitchRepresentation}, ::Type{AbstractInterval}) 
-	return error("Subtraction of intervals is not defined")
-end
+Base.:+(::Type{P}, ::Type{I}) where {P <: PitchRepresentation, I <: AbstractInterval} = 
+	displace(P, I, Right)
 
-# Letter + GenericInterval
-Base.:+(::Type{L}, ::Type{GenericInterval{N}}) where {L <: LetterName, N} = 
-	move(LetterSpace, L, N - 1)
+Base.:-(::Type{P}, ::Type{I}) where {P <: PitchRepresentation, I <: AbstractInterval} = 
+	displace(P, I, Left)
 
-# PitchClass + GenericInterval
-Base.:+(::Type{PC}, ::Type{GenericInterval{N}}) where {PC <: PitchClass, N} = 
-	PitchClass(letter(PC) + GenericInterval{N}, accidental(PC))
-
-# PitchClass + Interval
-function Base.:+(::Type{PC}, ::Type{Interval{N, Quality}}) where {PC <: PitchClass, N, Quality}
-	simple_target = PitchClass(LineOfFifths, number(LineOfFifths, PC) - 1 + mod(2N - 1, 7))
-	modified_target = modify(simple_target, offset(Interval{N, Quality}))
-	return modified_target
-end
-
-# Pitch + Interval
-function Base.:+(::Type{Pitch{PC, Reg}}, ::Type{Interval{N, Quality}}) where {PC, Reg, N, Quality}
-	new_pc = PC + Interval{N, Quality}
-	octaves = (N - 1) ÷ 7
-	# check if we've wrapped in letter space
-	old_letter_num = number(LetterSpace, letter(PC))
-	new_letter_num = number(LetterSpace, letter(new_pc))
-	steps_within = mod(N - 1, 7)
-	wrapped = steps_within > 0 && new_letter_num < old_letter_num
-	new_register = Reg + octaves + (wrapped ? 1 : 0)
-	return Pitch(new_pc, new_register)
-end
-
-Base.:^(::Type{I}, n::Integer) where I <: SpecificInterval = 
+Base.:^(::Type{I}, n::Integer) where I <: AbstractInterval = 
 	[I for _ in 1:n]
 
-# allow adding a vector of intervals to a pitch
-Base.:+(::Type{PC}, intervals::Vector) where PC <: PitchClass = 
-    foldl(+, intervals; init = PC)
+Base.:+(::Type{P}, intervals::Vector) where P <: PitchRepresentation = 
+	foldl(+, intervals; init = P)
 
-Base.:+(::Type{P}, intervals::Vector) where P <: Pitch = 
-    foldl(+, intervals; init = P)
+Base.:-(::Type{P}, intervals::Vector) where P <: PitchRepresentation = 
+	foldl(-, intervals; init = P)
 
 
 ## we can now define an Interval constructor that computes an interval based on given pitches
@@ -137,25 +148,25 @@ Base.:+(::Type{P}, intervals::Vector) where P <: Pitch =
 Compute the specific interval between two pitches.
 """
 @generated function Interval(::Type{P1}, ::Type{P2}) where {P1 <: Pitch, P2 <: Pitch}
-	n = mod(number(LetterSpace, letter(P2)) - number(LetterSpace, letter(P1)), 7) + 1
-	octaves = (number(P2) - number(P1)) ÷ 12
-	N = n + octaves * 7
-	semis = (number(P2) - number(P1)) % 12
-	base_semis = base(Interval{n, Major})  # use Major/Perfect as baseline
-	diff = semis - base_semis
-	quality = if n in (1, 4, 5, 8)  # perfect intervals
-		diff == 0  ? Perfect :
-		diff == 1  ? Augmented :
-		diff == -1 ? Diminished :
-		error("Invalid interval between $P1 and $P2")
+	steps = generic_position(P2) - generic_position(P1)
+	steps < 0 && error("Descending intervals are not supported; got $P1 to $P2")
+	number_of_octaves = steps ÷ 7
+	simple_number = mod(steps, 7) + 1
+	baseline = base(Interval{simple_number, Major}) + 12 * number_of_octaves
+	deviation = number(P2) - number(P1) - baseline
+	quality = if is_perfect_family(simple_number)
+		deviation ==  0 ? Perfect :
+		deviation ==  1 ? Augmented :
+		deviation == -1 ? Diminished :
+		error("No representable quality for the interval between $P1 and $P2")
 	else
-		diff == 0  ? Major :
-		diff == -1 ? Minor :
-		diff == 1  ? Augmented :
-		diff == -2 ? Diminished :
-		error("Invalid interval between $P1 and $P2")
+		deviation ==  0 ? Major :
+		deviation == -1 ? Minor :
+		deviation ==  1 ? Augmented :
+		deviation == -2 ? Diminished :
+		error("No representable quality for the interval between $P1 and $P2")
 	end
-	return :(Interval{$N, $quality})
+	return :(Interval{$(steps + 1), $quality})
 end
 
 

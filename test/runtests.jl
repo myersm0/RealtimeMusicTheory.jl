@@ -2,7 +2,8 @@ using RealtimeMusicTheory
 using BenchmarkTools
 using Test
 
-import RealtimeMusicTheory: semitones, offset, number
+import RealtimeMusicTheory: semitones, offset, number, is_perfect_family
+import RealtimeMusicTheory: positive_direction, negative_direction
 
 # todo: add iteration/enumeration of spaces so that we don't have to define this manually
 letters = [C, D, E, F, G, A, B]
@@ -51,14 +52,41 @@ registers = 1:6
 		end
 	end
 
+	@testset "Directions" begin
+		@test Left <: LinearDirection
+		@test Right <: LinearDirection
+		@test Clockwise <: CircularDirection
+		@test Counterclockwise <: CircularDirection
+		@test LinearDirection <: Direction
+		@test CircularDirection <: Direction
+
+		@test positive_direction(Linear) == Right
+		@test negative_direction(Linear) == Left
+		@test positive_direction(Circular) == Clockwise
+		@test negative_direction(Circular) == Counterclockwise
+
+		@test sign(Left) == -1
+		@test sign(Right) == 1
+		@test sign(Clockwise) == 1
+		@test sign(Counterclockwise) == -1
+
+		@test Right * 5 == 5
+		@test Left * 5 == -5
+		@test 5 * Counterclockwise == -5
+		@test Clockwise * Counterclockwise == -1
+		@test Left * Left == 1
+	end
+
 	@testset "Spaces" begin
 		@test number(Pitch(C, 4)) == 60  # middle C
 		@test number(Pitch(A, 4)) == 69  # A440
 		all_pitch_numbers = vec([number(pc[reg]) for pc in canonical_pitch_classes, reg in -1:8])
 		@test all_pitch_numbers == 0:119
+		@test [number(Pitch(n)) for n in -24:131] == -24:131
+		@test_throws ErrorException number(DiscretePitchSpace, C♮)
 		
 		@testset "LetterSpace (Generic, Circular)" begin
-			test_nums = collect(0:length(LetterSpace) - 1)
+			test_nums = collect(0:cardinality(LetterSpace) - 1)
 			@test [number(l) for l in letters] == test_nums
 			for acc in -2:2
 				@test [number(LetterSpace, PitchClass(l, acc)) for l in letters] == test_nums
@@ -72,6 +100,8 @@ registers = 1:6
 					@test distance(LetterSpace, letters[j], letters[i]) == abs(d)
 					@test direction(LetterSpace, letters[i], letters[j]) == (d < 0 ? Counterclockwise : Clockwise)
 					@test direction(LetterSpace, letters[j], letters[i]) == (d <= 0 ? Clockwise : Counterclockwise)
+					@test distance(LetterSpace, Clockwise, letters[i], letters[j]) == mod(j - i, 7)
+					@test distance(LetterSpace, Counterclockwise, letters[i], letters[j]) == mod(i - j, 7)
 				end
 			end
 		end
@@ -120,7 +150,9 @@ registers = 1:6
 		@testset "LineOfFifths (Linear, Infinite)" begin
 			@test Base.isfinite(LineOfFifths) == false
 			@test TopologyStyle(LineOfFifths) == Linear
-			@test_throws ErrorException Base.size(LineOfFifths)
+			@test_throws MethodError number(LineOfFifths, 3)
+			@test_throws ErrorException cardinality(LineOfFifths)
+			@test_throws ErrorException length(LineOfFifths)
 			# adjacent elements should always be 5 semitones apart from each other:
 			for i in -24:24
 				a = PitchClass(LineOfFifths, i - 1)
@@ -158,7 +190,8 @@ registers = 1:6
 		
 		# todo: make this more comprehensive; e.g. modeled on the above
 		@testset "CircleOfFifths" begin
-			@test Base.size(CircleOfFifths) == 12
+			@test cardinality(CircleOfFifths) == 12
+			@test length(CircleOfFifths) == cardinality(CircleOfFifths)
 			@test TopologyStyle(CircleOfFifths) == Circular
 			@test number(CircleOfFifths, C♮) == 0
 			@test number(CircleOfFifths, G♮) == 1
@@ -166,6 +199,8 @@ registers = 1:6
 			@test distance(CircleOfFifths, C♮, G♮) == 1
 			@test distance(CircleOfFifths, C♮, F♮) == 1  # Other direction
 			@test distance(CircleOfFifths, C♮, F♯) == 6  # Opposite side
+			@test distance(CircleOfFifths, Clockwise, C♮, C♮) == 0
+			@test distance(CircleOfFifths, Counterclockwise, C♮, C♮) == 0
 		end
 
 		# todo: test indexing of other spaces in this way
@@ -193,7 +228,7 @@ registers = 1:6
 	@testset "Interval arithmetic" begin
 		for l in letters
 			for n in 1:14
-				expected_distance = (n - 1) % length(LetterSpace)
+				expected_distance = (n - 1) % cardinality(LetterSpace)
 				@test distance(LetterSpace, Clockwise, l, l + GenericInterval(n)) == expected_distance
 				# for PitchClass, sharpening of flattening should not change generic distance:
 				for acc in -3:3
@@ -260,6 +295,68 @@ registers = 1:6
 			@test Interval(D♮[4], E♭[4 + r]) == Interval(2 + 7r, Minor)
 			@test Interval(D♮[4], E♮[4 + r]) == Interval(2 + 7r, Major)
 			@test Interval(B♮[4], B♯[5 + r]) == Interval(8 + 7r, Augmented)
+		end
+
+		# accidentals that cross a chromatic register boundary must not shift
+		# the generic interval number
+		@test Interval(C♮[4], B♯[4]) == Interval(7, Augmented)
+		@test Interval(C♮[4], C♭[5]) == Interval(8, Diminished)
+		@test Interval(C♮[4], C♯[4]) == Interval(1, Augmented)
+		@test Interval(B♯[4], C♯[5]) == Interval(2, Minor)
+		@test Interval(B♮[3], C♭[4]) == Interval(2, Diminished)
+
+		@test_throws ErrorException Interval(E♮[4], C♮[4])
+
+		# compound diminished intervals reduce to their simple interval class
+		@test C♮ + Interval(11, Diminished) == F♭
+		@test C♮ + Interval(12, Diminished) == G♭
+		@test C♮ + Interval(15, Diminished) == C♭
+		@test C♮ + Interval(9, Diminished) == D𝄫
+
+		test_intervals = [
+			Interval(n, quality)
+			for n in 1:15
+			for quality in (
+				is_perfect_family(n) ?
+					[Perfect, Augmented, Diminished] :
+					[Major, Minor, Augmented, Diminished]
+			)
+		]
+
+		@testset "Interval round trip" begin
+			for l in letters, acc in -1:1
+				p = Pitch(l, Accidental(acc), 4)
+				for interval in test_intervals
+					@test Interval(p, p + interval) == interval
+					@test (p + interval) - interval == p
+					@test Interval(p - interval, p) == interval
+				end
+			end
+		end
+
+		@testset "Descending displacement" begin
+			@test C♮ - P5 == F♮
+			@test C♮ - P4 == G♮
+			@test C♮ - M3 == A♭
+			@test C♮ - m3 == A♮
+			@test C♮ - Interval(5, Diminished) == F♯
+			@test C♮ - Interval(5, Augmented) == F♭
+			@test C♮ - P8 == C♮
+			@test C - GenericInterval(3) == A
+
+			@test C♮[4] - P8 == C♮[3]
+			@test C♮[4] - P5 == F♮[3]
+			@test C♮[4] - m2 == B♮[3]
+			@test C♮[4] - P1 == C♮[4]
+			@test C♮[4] - P8^2 == C♮[2]
+			@test C♮[4] - Interval(15, Perfect) == C♮[2]
+			@test B♮[4] - Interval(8, Augmented) == B♭[3]
+
+			for l in letters, acc in -1:1, reg in 3:5
+				p = Pitch(l, Accidental(acc), reg)
+				@test register(p - P1) == reg
+				@test register(p - P8) == reg - 1
+			end
 		end
 
 		# for any pitch, adding a unison will not change the register; 

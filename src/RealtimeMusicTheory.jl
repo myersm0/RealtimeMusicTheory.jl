@@ -16,7 +16,7 @@ export TopologyStyle, Linear, Circular
 export Direction, LinearDirection, Left, Right, CircularDirection, Clockwise, Counterclockwise
 
 include("space_defs.jl")
-export MusicalSpace, DiscreteSpace, ContinuousSpace
+export MusicalSpace, DiscreteSpace, ContinuousSpace, cardinality
 export LetterSpace, GenericFifthsSpace, GenericThirdsSpace, LineOfFifths, CircleOfFifths
 export PitchClassSpace, DiscretePitchSpace
 
