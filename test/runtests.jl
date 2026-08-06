@@ -56,6 +56,8 @@ registers = 1:6
 		@test number(Pitch(A, 4)) == 69  # A440
 		all_pitch_numbers = vec([number(pc[reg]) for pc in canonical_pitch_classes, reg in -1:8])
 		@test all_pitch_numbers == 0:119
+		@test [number(Pitch(n)) for n in -24:131] == -24:131
+		@test_throws ErrorException number(DiscretePitchSpace, C♮)
 		
 		@testset "LetterSpace (Generic, Circular)" begin
 			test_nums = collect(0:cardinality(LetterSpace) - 1)
@@ -122,6 +124,7 @@ registers = 1:6
 		@testset "LineOfFifths (Linear, Infinite)" begin
 			@test Base.isfinite(LineOfFifths) == false
 			@test TopologyStyle(LineOfFifths) == Linear
+			@test_throws MethodError number(LineOfFifths, 3)
 			@test_throws ErrorException cardinality(LineOfFifths)
 			@test_throws ErrorException length(LineOfFifths)
 			# adjacent elements should always be 5 semitones apart from each other:

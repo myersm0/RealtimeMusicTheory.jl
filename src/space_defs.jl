@@ -143,7 +143,6 @@ PitchClass(::Type{LineOfFifths}, ::Val{3}) = B♮
 		PitchClass(letter(base_pc), Accidental($accidental_offset))
 	end
 end
-number(::Type{LineOfFifths}, n::Int) = PitchClass(LineOfFifths, Val(n))
 number(::Type{LineOfFifths}, ::Type{F♮}) = -3
 number(::Type{LineOfFifths}, ::Type{C♮}) = -2
 number(::Type{LineOfFifths}, ::Type{G♮}) = -1
@@ -256,9 +255,9 @@ Base.isfinite(::Type{DiscretePitchSpace}) = false
 Pitch(n::Int) = Pitch(DiscretePitchSpace, Val(n))
 Pitch(::Type{DiscretePitchSpace}, n::Int) = Pitch(DiscretePitchSpace, Val(n))
 function Pitch(::Type{DiscretePitchSpace}, ::Val{N}) where N
-	pc_num = N % 12
-	register = (N ÷ 12) - 1
-	return Pitch(PitchClass(PitchClassSpace, Val(pc_num)), register)
+	pitch_class_number = mod(N, 12)
+	register_number = fld(N, 12) - 1
+	return Pitch(PitchClass(PitchClassSpace, Val(pitch_class_number)), register_number)
 end
 function number(::Type{DiscretePitchSpace}, ::Type{Pitch{PC, Reg}}) where {PC, Reg}
 	# note that this function def has been modified from the former, simpler:
@@ -279,12 +278,11 @@ number(::Type{P}) where P <: Pitch = number(DiscretePitchSpace, P)
 # if supplied PitchClass is not defined above, need to find an enharmonic equivalent
 # as follows and then dispatch to that instead:
 @generated function number(::Type{S}, ::Type{PC}) where {S <: DiscreteSpace, PC <: PitchClass}
-	current_pos = number(LineOfFifths, PC)
-	acc_offset = offset(accidental(PC))
-	# force it to have a canonical pos in PitchClassSpace i.e. between -3 and 8:
-	canonical_pos = mod(current_pos + 3, 12) - 3
-	canonical_pc = PitchClass(LineOfFifths, canonical_pos)
-	return :(number(S, $canonical_pc))
+	# force a canonical position in PitchClassSpace, i.e. between -3 and 8:
+	canonical_position = mod(number(LineOfFifths, PC) + 3, 12) - 3
+	canonical = PitchClass(LineOfFifths, canonical_position)
+	canonical === PC && error("number is not defined for $PC in $S")
+	return :(number(S, $canonical))
 end
 
 
