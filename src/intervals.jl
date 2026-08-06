@@ -74,6 +74,10 @@ offset(::Type{Interval{N, Perfect}}) where N	=  0
 offset(::Type{Interval{N, Augmented}}) where N  =  1
 offset(::Type{Interval{N, Diminished}}) where N = N in [1, 4, 5, 8] ? -1 : -2
 
+# position of a pitch in letter space, unrolled across registers
+generic_position(::Type{P}) where P <: Pitch = 
+	number(LetterSpace, letter(P)) + 7 * register(P)
+
 function semitones(interval::Type{Interval{N, Quality}}) where {N, Quality}
 	simple_n = (N - 1) % 7 + 1 # 1-based (1=unison, 8=octave)
 	octaves = (N - 1) ÷ 7
@@ -137,25 +141,25 @@ Base.:+(::Type{P}, intervals::Vector) where P <: Pitch =
 Compute the specific interval between two pitches.
 """
 @generated function Interval(::Type{P1}, ::Type{P2}) where {P1 <: Pitch, P2 <: Pitch}
-	n = mod(number(LetterSpace, letter(P2)) - number(LetterSpace, letter(P1)), 7) + 1
-	octaves = (number(P2) - number(P1)) ÷ 12
-	N = n + octaves * 7
-	semis = (number(P2) - number(P1)) % 12
-	base_semis = base(Interval{n, Major})  # use Major/Perfect as baseline
-	diff = semis - base_semis
-	quality = if n in (1, 4, 5, 8)  # perfect intervals
-		diff == 0  ? Perfect :
-		diff == 1  ? Augmented :
-		diff == -1 ? Diminished :
-		error("Invalid interval between $P1 and $P2")
+	steps = generic_position(P2) - generic_position(P1)
+	steps < 0 && error("Descending intervals are not supported; got $P1 to $P2")
+	number_of_octaves = steps ÷ 7
+	simple_number = mod(steps, 7) + 1
+	baseline = base(Interval{simple_number, Major}) + 12 * number_of_octaves
+	deviation = number(P2) - number(P1) - baseline
+	quality = if simple_number in (1, 4, 5)
+		deviation ==  0 ? Perfect :
+		deviation ==  1 ? Augmented :
+		deviation == -1 ? Diminished :
+		error("No representable quality for the interval between $P1 and $P2")
 	else
-		diff == 0  ? Major :
-		diff == -1 ? Minor :
-		diff == 1  ? Augmented :
-		diff == -2 ? Diminished :
-		error("Invalid interval between $P1 and $P2")
+		deviation ==  0 ? Major :
+		deviation == -1 ? Minor :
+		deviation ==  1 ? Augmented :
+		deviation == -2 ? Diminished :
+		error("No representable quality for the interval between $P1 and $P2")
 	end
-	return :(Interval{$N, $quality})
+	return :(Interval{$(steps + 1), $quality})
 end
 
 

@@ -262,6 +262,35 @@ registers = 1:6
 			@test Interval(B♮[4], B♯[5 + r]) == Interval(8 + 7r, Augmented)
 		end
 
+		# accidentals that cross a chromatic register boundary must not shift
+		# the generic interval number
+		@test Interval(C♮[4], B♯[4]) == Interval(7, Augmented)
+		@test Interval(C♮[4], C♭[5]) == Interval(8, Diminished)
+		@test Interval(C♮[4], C♯[4]) == Interval(1, Augmented)
+		@test Interval(B♯[4], C♯[5]) == Interval(2, Minor)
+		@test Interval(B♮[3], C♭[4]) == Interval(2, Diminished)
+
+		@test_throws ErrorException Interval(E♮[4], C♮[4])
+
+		simple_intervals = [
+			Interval(n, quality)
+			for n in 1:8
+			for quality in (
+				n in (1, 4, 5, 8) ?
+					[Perfect, Augmented, Diminished] :
+					[Major, Minor, Augmented, Diminished]
+			)
+		]
+
+		@testset "Interval round trip" begin
+			for l in letters, acc in -1:1
+				p = Pitch(l, Accidental(acc), 4)
+				for interval in simple_intervals
+					@test Interval(p, p + interval) == interval
+				end
+			end
+		end
+
 		# for any pitch, adding a unison will not change the register; 
 		# adding an octave (or two) will
 		for l in letters
